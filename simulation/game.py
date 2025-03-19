@@ -1,10 +1,10 @@
 import random
-from agents import random_agent
+from agents.random_agent import agent_instance as default_agent
 
 class Game:
     def __init__(self):
         self.reset_grid()
-        self.agent = random_agent
+        self.agent = default_agent
 
     def reset_grid(self):
         """Reset the grid with two new random tiles and clear last move."""

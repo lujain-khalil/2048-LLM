@@ -1,8 +1,14 @@
-_moves = ["up", "right", "down", "left"]
-_current_index = 0
+# agents/loop_agent.py
+from agents.agent import Agent
 
-def get_move():
-    global _current_index
-    move = _moves[_current_index]
-    _current_index = (_current_index + 1) % len(_moves)
-    return move
+class LoopAgent(Agent):
+    _moves = ["up", "right", "down", "left"]
+    _current_index = 0
+
+    def get_move(self):
+        move = self._moves[self._current_index]
+        self._current_index = (self._current_index + 1) % len(self._moves)
+        return move
+
+# Create an instance for registration.
+agent_instance = LoopAgent()

@@ -81,8 +81,7 @@ export function updateSpeedButtons(activeBtnID) {
 }
 
 // Agent control buttons
-export function changeAgent(activeAgent) {
-
+function changeAgent(activeAgent) {
     fetch(`/set_agent/${activeAgent}`)
         .then(response => response.json())
         .then(data => updateAgentButtons(activeAgent))
@@ -91,9 +90,31 @@ export function changeAgent(activeAgent) {
 
 
 function updateAgentButtons(activeAgent) {
-    const randomBtn = document.getElementById("random-agent-btn");
-    const loopBtn = document.getElementById("loop-agent-btn");
+    const agentButtons = document.querySelectorAll("#agent-controls button");
+    agentButtons.forEach(btn => {
+        btn.disabled = (btn.id === `agent-btn-${activeAgent}`);
+    });
+}
 
-    randomBtn.disabled = (activeAgent === "random");
-    loopBtn.disabled = (activeAgent === "loop");
+export function loadAgentControls() {
+    fetch('/agents')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById("agent-controls");
+            container.innerHTML = "";
+            data.agents.forEach(agent => {
+                const btn = document.createElement("button");
+                btn.id = `agent-btn-${agent.name}`;
+                btn.textContent = agent.display_name;
+
+                if (agent.name === "random") {
+                    btn.disabled = true;
+                }
+                btn.addEventListener("click", () => {
+                    changeAgent(agent.name);
+                });
+                container.appendChild(btn);
+            });
+        })
+        .catch(error => console.error("Error loading agents:", error));
 }

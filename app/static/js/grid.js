@@ -17,4 +17,3 @@ export function updateGrid(grid) {
     html += "</table>";
     gridContainer.innerHTML = html;
 }
-
