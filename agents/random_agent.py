@@ -1,5 +1,10 @@
+# agents/random_agent.py
 import random
+from agents.agent import Agent
 
-def get_move():
-    """Randomly return one of the moves: up, down, left, or right."""
-    return random.choice(["up", "down", "left", "right"])
+class RandomAgent(Agent):
+    def get_move(self):
+        return random.choice(["up", "down", "left", "right"])
+
+# Create an instance for registration.
+agent_instance = RandomAgent()

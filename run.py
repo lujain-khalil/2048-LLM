@@ -1,13 +1,14 @@
 from app import app
 from flask import render_template, jsonify
 from simulation.game import Game
+from agents.registry import get_agent, list_agents
 
 game = None
 
 @app.route('/')
 def index():
     global game
-    game = Game()  # Create a new game with 2 random tiles
+    game = Game()
     return render_template('index.html', grid=game.grid, move=game.last_move)
 
 @app.route('/update')
@@ -25,15 +26,16 @@ def restart():
 @app.route('/set_agent/<agent_name>')
 def set_agent(agent_name):
     global game
-    if agent_name == 'random':
-        from agents import random_agent
-        game.set_agent(random_agent)
-        
-    elif agent_name == 'loop':
-        from agents import loop_agent
-        game.set_agent(loop_agent)
+    agent = get_agent(agent_name)
+    if agent:
+        game.set_agent(agent)
+        return jsonify(status="ok", agent=agent_name)
+    else:
+        return jsonify(status="error", message="Unknown agent"), 400
 
-    return jsonify(status="ok", agent=agent_name)
+@app.route('/agents')
+def agents():
+    return jsonify(agents=list_agents())
 
 if __name__ == '__main__':
     game = Game()
