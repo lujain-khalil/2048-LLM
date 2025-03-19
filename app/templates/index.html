@@ -4,10 +4,39 @@
     <meta charset="UTF-8">
     <title>2048 LLM Demo</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </head>
 <body>
-    <h1>Welcome to the 2048 LLM Demo!</h1>
-    <p>Random move value: <span id="gameNumber"></span></p>
+    <h1>2048 AI Demo</h1>
+    <div id="controls">
+        <div id="play-controls">
+            <button id="pause-btn">Pause</button>
+            <button id="resume-btn">Resume</button>
+            <button id="restart-btn">Restart</button>    
+        </div>
+        <div id="speed-controls">
+            <button id="slow-btn">Slow</button>
+            <button id="normal-btn">Normal</button>
+            <button id="fast-btn">Fast</button>
+        </div>
+        <div id="agent-controls">
+            <button id="random-agent-btn">Random Agent</button>
+            <button id="loop-agent-btn">Loop Agent</button>
+        </div>        
+    </div>
+    <p>Last move: <span id="move">{{ move }}</span></p>
+    <div id="grid-container"></div>
+    
+    <script id="initial-grid" type="application/json">
+        {{ grid | tojson | safe }}
+    </script>
+    <script>
+        try {
+            window.initialGrid = JSON.parse(document.getElementById("initial-grid").textContent.trim());
+        } catch (e) {
+            console.error("Error parsing initial grid JSON:", e);
+            window.initialGrid = null;
+        }
+    </script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
