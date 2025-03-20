@@ -1,8 +1,7 @@
-# agents/loop_agent.py
 from agents.agent import Agent
 
 class LoopAgent(Agent):
-    _moves = ["up", "right", "down", "left"]
+    _moves = ["UP", "RIGHT", "DOWN", "LEFT"]
     _current_index = 0
 
     def get_move(self):

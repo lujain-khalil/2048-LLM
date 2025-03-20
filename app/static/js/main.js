@@ -1,9 +1,8 @@
 import { updateGrid } from './grid.js';
-import { startGame, pauseGame, resumeGame, restartGame, changeSpeed, loadAgentControls} from './controls.js';
+import { startGame, pauseGame, resumeGame, restartGame, changeSpeed, changeAgent} from './controls.js';
 
 // Expose updateGrid globally if needed by controls.js or other scripts.
 window.updateGrid = updateGrid;
-
 
 // Render initial grid and set up event listeners once the page loads.
 window.addEventListener("load", function() {
@@ -20,12 +19,13 @@ window.addEventListener("load", function() {
     document.getElementById("resume-btn").addEventListener("click", resumeGame);
     document.getElementById("restart-btn").addEventListener("click", restartGame);
     
-    // Speed control buttons.
-    document.getElementById("normal-btn").disabled = true;
-    document.getElementById("slow-btn").addEventListener("click", () => changeSpeed("slow-btn"));
-    document.getElementById("normal-btn").addEventListener("click", () => changeSpeed("normal-btn"));
-    document.getElementById("fast-btn").addEventListener("click", () => changeSpeed("fast-btn"));
-    
-    // Load agent control buttons dynamically.
-    loadAgentControls();
+    // Speed control dropdown.
+    document.getElementById("speed-select").addEventListener("change", function() {
+        changeSpeed(this.value);  // Correct context
+    });
+
+    // Agent control dropdown.
+    document.getElementById("agent-select").addEventListener("change", function() {
+        changeAgent(this.value);  // Correct context
+    });
 });

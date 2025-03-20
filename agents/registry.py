@@ -1,4 +1,3 @@
-# agents/registry.py
 from agents.random_agent import agent_instance as random_agent_instance
 from agents.loop_agent import agent_instance as loop_agent_instance
 
