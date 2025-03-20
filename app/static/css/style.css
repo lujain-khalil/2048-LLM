@@ -1,27 +1,184 @@
+:root {
+    --grid-width: 440px;
+    --tile-size: 100px;
+    --tile-gap: 10px;
+    --control-btn-size: 32px;
+    --font-main: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+    --bg-color: #fdf8ef;
+    --logo-bg: #f2d500;
+    --score-bg: #bbada0;
+    --dropdown-bg: #f2b179;
+    --top-height: 120px;
+    --top-width: 120px;
+}
+
 body {
-    font-family: 'Clear Sans', Arial, sans-serif;
-    background: #faf8ef;
+    background: var(--bg-color);
+    font-family: var(--font-main);
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Layout Wrapper */
+#main-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 20px 0;
+}
+
+/* Top Container */
+#top-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: var(--grid-width);
+    margin-bottom: 10px;
+}
+
+/* 2048 Logo */
+#title-container {
+    background-color: var(--logo-bg);
+    color: #ffffff;
+    font-size: 36px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--top-width);
+    height: var(--top-height);
+    border-radius: 5px;
+}
+
+#title-container::after {
+    content: "2048";
+}
+
+/* Score & Move Blocks */
+#score-block, #move-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: var(--top-width);
+    height: var(--top-height);
+}
+
+#score-container, #last-move-container {
+    background-color: var(--score-bg);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 4px;
+    width: 100px;
+    height: 60px;
+    font-weight: bold;
+    font-size: 24px;
+}
+#score-container .label,
+#last-move-container .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+/* Dropdowns */
+#speed-select,
+#agent-select {
+    background-color: var(--dropdown-bg);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    width: 120px;
+    height: 30px;
+}
+
+/* Subheader + Controls Row */
+#subheader-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: var(--grid-width);
+    margin: 10px 0;
+}
+
+/* Subheader Left-aligned within grid width */
+#subheader {
+    font-size: 16px;
     color: #776e65;
-    margin: 20px;
+    font-weight: bold;
 }
 
+/* Controls - Right-aligned, horizontal */
+#control-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+#play-controls {
+    display: flex;
+    gap: 10px;
+}
+#play-controls button {
+    background: none;
+    border: 2px solid var(--score-bg);
+    color: var(--score-bg);
+    border-radius: 50%;
+    font-size: 18px;
+    width: var(--control-btn-size);
+    height: var(--control-btn-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+#play-controls button:hover {
+    background-color: var(--score-bg);
+    color: #fff;
+}
+#play-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Grid Container */
+#grid-container {
+    margin-top: 0;
+}
 table {
-    border-collapse: collapse;
-    margin-top: 20px;
+    background: var(--score-bg);
+    border-radius: 6px;
+    border-collapse: separate;
+    border-spacing: var(--tile-gap);
 }
-
 td {
-    border: 1px solid #333;
+    width: var(--tile-size);
+    height: var(--tile-size);
     border-radius: 3px;
+    background: #cdc1b4;
+    font-size: 36px;
     font-weight: bold;
     text-align: center;
     vertical-align: middle;
-    font-size: 24px;
-    width: 80px;
-    height: 80px;
+    color: #776e65;
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+/* Tile Colors */
 .tile-0 { background: #cdc1b4; }
 .tile-2 { background: #eee4da; color: #776e65; }
 .tile-4 { background: #ede0c8; color: #776e65; }

@@ -1,4 +1,3 @@
-# agents/agent.py
 from abc import ABC, abstractmethod
 
 class Agent(ABC):

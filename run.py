@@ -20,7 +20,7 @@ def update():
 @app.route('/restart')
 def restart():
     global game
-    game = Game()  # Replace the current game with a new one
+    game = Game()
     return jsonify(grid=game.grid)
 
 @app.route('/set_agent/<agent_name>')

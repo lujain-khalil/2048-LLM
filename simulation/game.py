@@ -46,15 +46,15 @@ class Game:
         following the 2048 game rules.
         """
         new_grid = None
-        if direction == "left":
+        if direction == "LEFT":
             new_grid = [self.merge_row_left(row) for row in self.grid]
-        elif direction == "right":
+        elif direction == "RIGHT":
             new_grid = [list(reversed(self.merge_row_left(list(reversed(row))))) for row in self.grid]
-        elif direction == "up":
+        elif direction == "UP":
             transposed = [list(x) for x in zip(*self.grid)]
             new_transposed = [self.merge_row_left(row) for row in transposed]
             new_grid = [list(x) for x in zip(*new_transposed)]
-        elif direction == "down":
+        elif direction == "DOWN":
             transposed = [list(x) for x in zip(*self.grid)]
             new_transposed = [list(reversed(self.merge_row_left(list(reversed(row))))) for row in transposed]
             new_grid = [list(x) for x in zip(*new_transposed)]

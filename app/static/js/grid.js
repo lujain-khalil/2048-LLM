@@ -1,8 +1,8 @@
-// grid.js
-
-// Updating the grid
 export function updateGrid(grid) {
+    console.log("Rendering Grid:", grid);  // DEBUG LOG
     const gridContainer = document.getElementById("grid-container");
+    console.log("Grid Container Element:", gridContainer);  // DEBUG LOG
+
     let html = "<table>";
     for (let i = 0; i < grid.length; i++) {
         html += "<tr>";

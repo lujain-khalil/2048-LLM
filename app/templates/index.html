@@ -6,23 +6,52 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>2048 AI Demo</h1>
-    <div id="controls">
-        <div id="play-controls">
-            <button id="pause-btn">Pause</button>
-            <button id="resume-btn">Resume</button>
-            <button id="restart-btn">Restart</button>    
+    <div id="main-wrapper">
+        <div id="top-container">
+            <div id="title-container"></div>
+            
+            <!-- Score + Speed -->
+            <div id="score-block">
+                <div id="score-container">
+                    <div class="label">SCORE</div>
+                    <div id="score">0</div>
+                </div>
+                <select id="speed-select">
+                    <option value="slow">Slow</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="fast">Fast</option>
+                </select>
+            </div>
+            
+            <!-- Last Move + Agent -->
+            <div id="move-block">
+                <div id="last-move-container">
+                    <div class="label">LAST MOVE</div>
+                    <div id="move">{{ move }}</div>
+                </div>
+                <select id="agent-select">
+                    <option value="random" selected>Random</option>
+                    <option value="loop">Loop</option>
+                </select>
+            </div>
         </div>
-        <div id="speed-controls">
-            <button id="slow-btn">Slow</button>
-            <button id="normal-btn">Normal</button>
-            <button id="fast-btn">Fast</button>
+
+
+        <div id="subheader-controls">
+
+            <div id="subheader">Watch AI get to the 2048 tile!</div>
+
+            <div id="control-bar">
+                <div id="play-controls">
+                    <button id="pause-btn" title="Pause">&#10073;&#10073;</button>
+                    <button id="resume-btn" title="Resume">&#9658;</button>
+                    <button id="restart-btn" title="Restart">&#x21BB;</button>
+                </div>
+            </div>
         </div>
-        <div id="agent-controls"></div>        
+        <div id="grid-container"></div>
     </div>
-    <p>Last move: <span id="move">{{ move }}</span></p>
-    <div id="grid-container"></div>
-    
+
     <script id="initial-grid" type="application/json">
         {{ grid | tojson | safe }}
     </script>
@@ -35,5 +64,6 @@
         }
     </script>
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 </body>
 </html>
