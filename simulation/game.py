@@ -1,75 +1,113 @@
 import random
-from agents.random_agent import agent_instance as default_agent
+from agents.registry import get_agent
+from simulation.game_utils import simulate_move_on_grid, get_empty_cells, is_terminal as is_terminal_static
 
 class Game:
     def __init__(self):
+        # Default to random agent if available
+        default_agent_name = 'random'
+        agent_class = get_agent(default_agent_name)
+        if not agent_class:
+            # Fallback: try to find *any* agent if random isn't registered yet
+            all_agents = list_agents() 
+            if all_agents:
+                 default_agent_name = all_agents[0]
+                 agent_class = get_agent(default_agent_name)
+                 print(f"Warning: Default agent 'random' not found. Using '{default_agent_name}' instead.")
+            else:
+                 # This case should ideally not happen if registry works
+                 raise ImportError("No agents found in registry. Cannot initialize Game.")
+        
+        self.agent_class = agent_class
+        self.agent = None
         self.reset_grid()
-        self.agent = default_agent
 
     def reset_grid(self):
-        """Reset the grid with two new random tiles and clear last move."""
+        """Reset the grid, clear last move, and instantiate the current agent."""
         self.grid = [[0 for _ in range(4)] for _ in range(4)]
         self.last_move = ""
+        self.score = 0
         self.add_random_tile()
         self.add_random_tile()
+        # Ensure agent is instantiated *after* the grid is initialized
+        if self.agent_class:
+            self.agent = self.agent_class(self)
+        else:
+             # This indicates a problem during __init__
+             raise Exception("Agent class not set during Game initialization.")
 
     def add_random_tile(self):
         """Add a new tile (2 or 4) at a random empty cell."""
-        empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
+        # Use the utility function
+        empty_cells = get_empty_cells(self.grid)
         if empty_cells:
             i, j = random.choice(empty_cells)
             self.grid[i][j] = 2 if random.random() < 0.9 else 4
 
-    def merge_row_left(self, row):
-        """
-        Merge a single row to the left following 2048 rules:
-        slide numbers to the left and merge same adjacent tiles.
-        """
-        filtered = [num for num in row if num != 0]
-        merged = []
-        skip = False
-        for i in range(len(filtered)):
-            if skip:
-                skip = False
-                continue
-            if i + 1 < len(filtered) and filtered[i] == filtered[i+1]:
-                merged.append(filtered[i] * 2)
-                skip = True
-            else:
-                merged.append(filtered[i])
-        merged.extend([0] * (4 - len(merged)))
-        return merged
-
     def move_grid(self, direction):
         """
-        Move the grid in the given direction ("up", "down", "left", "right")
-        following the 2048 game rules.
+        Move the grid in the given direction using the utility function.
+        Returns True if the grid changed, False otherwise.
+        Updates the game score.
         """
-        new_grid = None
-        if direction == "LEFT":
-            new_grid = [self.merge_row_left(row) for row in self.grid]
-        elif direction == "RIGHT":
-            new_grid = [list(reversed(self.merge_row_left(list(reversed(row))))) for row in self.grid]
-        elif direction == "UP":
-            transposed = [list(x) for x in zip(*self.grid)]
-            new_transposed = [self.merge_row_left(row) for row in transposed]
-            new_grid = [list(x) for x in zip(*new_transposed)]
-        elif direction == "DOWN":
-            transposed = [list(x) for x in zip(*self.grid)]
-            new_transposed = [list(reversed(self.merge_row_left(list(reversed(row))))) for row in transposed]
-            new_grid = [list(x) for x in zip(*new_transposed)]
-        if new_grid is not None:
+        # Use the utility function for simulation
+        new_grid, score_increase, changed = simulate_move_on_grid(self.grid, direction)
+        if changed:
             self.grid = new_grid
+            self.score += score_increase
+            return True
+        else:
+            return False
+
+    def is_game_over(self):
+        """Check if no more moves are possible using the static utility function."""
+        # Use the utility function for the check
+        return is_terminal_static(self.grid)
+
+    def get_max_tile(self):
+        """Return the value of the highest tile on the board."""
+        max_tile = 0
+        # Optimize slightly by avoiding max on empty row
+        for row in self.grid:
+             if any(row):
+                  max_tile = max(max_tile, max(row))
+        return max_tile
 
     def simulate_move(self):
-        """Simulate a move using the random agent, update the grid and record the move."""
-        move = self.agent.get_move()
-        self.move_grid(move)
-        self.add_random_tile()
-        self.last_move = move
-        return move
-    
-    def set_agent(self, agent_module):
-        self.agent = agent_module
+        """Get a move from the agent, execute it, add tile if moved, check game over."""
+        if not self.agent:
+             # This might happen if agent fails to instantiate in reset_grid
+             raise Exception("Agent not initialized! Cannot simulate move.")
 
-game = Game()
+        move = self.agent.get_move()
+        # Ensure move is valid before proceeding? (Optional, agents should return valid)
+        if move not in ["UP", "DOWN", "LEFT", "RIGHT"]:
+            print(f"Warning: Agent returned invalid move '{move}'. Skipping turn.")
+            # Decide how to handle - return current state? Or raise error?
+            # Returning current state might be safer for simulation loop
+            game_over = self.is_game_over()
+            return move, False, game_over, self.score
+            
+        moved = self.move_grid(move)
+
+        if moved:
+            self.add_random_tile()
+            self.last_move = move
+        else:
+             self.last_move = f"{move} (invalid)"
+
+        game_over = self.is_game_over()
+        return move, moved, game_over, self.score
+
+    def set_agent(self, agent_name):
+        """Set the agent class by name using the registry."""
+        agent_class = get_agent(agent_name)
+        if agent_class:
+            self.agent_class = agent_class
+            print(f"Agent class set to: {agent_name}")
+            # Agent instance will be created/updated on next reset_grid()
+            # Or force reset here? self.reset_grid() - might be unexpected
+            return True
+        else:
+            print(f"Error: Agent class '{agent_name}' not found in registry: {list_agents()}")
+            return False
