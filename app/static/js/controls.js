@@ -1,9 +1,10 @@
 let gameInterval;
 let isPaused = false;
+let previousGrid = null;
 
-let fastSpeed = 200
-let normalSpeed = 800
-let slowSpeed = 1200
+let fastSpeed = 200;
+let normalSpeed = 800;
+let slowSpeed = 1200;
 
 let updateDelay = normalSpeed;
 
@@ -13,7 +14,9 @@ export function updateGame() {
         .then(response => response.json())
         .then(data => {
             document.getElementById("move").innerText = data.move;
-            window.updateGrid(data.grid);
+            document.getElementById("score").innerText = data.score;
+            window.updateGrid(data.grid, previousGrid, data.new_tile_position);  // Pass new_tile_position
+            previousGrid = JSON.parse(JSON.stringify(data.grid));  // Deep copy the current grid
         })
         .catch(error => console.error('Error:', error));
 }
@@ -45,8 +48,11 @@ export function restartGame() {
     fetch('/restart')
         .then(response => response.json())
         .then(data => {
-            window.updateGrid(data.grid);
-            document.getElementById("move").innerText = "";
+            previousGrid = createEmptyGrid();  // Reset to empty grid instead of null
+            window.updateGrid(data.grid, previousGrid, data.new_tile_position);  // Pass new_tile_position
+            document.getElementById("move").innerText = "NONE";
+            document.getElementById("score").innerText = data.score;
+            previousGrid = JSON.parse(JSON.stringify(data.grid));  // Store the initial grid
         })
         .catch(error => console.error('Error:', error));
 }

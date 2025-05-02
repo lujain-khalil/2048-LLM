@@ -86,6 +86,7 @@ body {
     font-weight: bold;
     font-size: 24px;
 }
+
 #score-container .label,
 #last-move-container .label {
     font-size: 12px;
@@ -159,6 +160,7 @@ body {
 #grid-container {
     margin-top: 0;
 }
+
 table {
     background: var(--score-bg);
     border-radius: 6px;
@@ -174,8 +176,6 @@ td {
     font-weight: bold;
     text-align: center;
     vertical-align: middle;
-    color: #776e65;
-    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 /* Tile Colors */
@@ -191,3 +191,42 @@ td {
 .tile-512 { background: #edc850; color: #f9f6f2; }
 .tile-1024 { background: #edc53f; color: #f9f6f2; }
 .tile-2048 { background: #edc22e; color: #f9f6f2; }
+
+/* New tiles appearing */
+@keyframes appear {
+    0% {
+      opacity: 0;
+      transform: scale(0);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    } 
+}
+  
+.tile-new {
+    animation: appear 200ms ease 100ms;
+    animation-fill-mode: backwards;
+}
+
+/* Merging two tiles */
+@keyframes pop {
+    0% {
+      transform: scale(0); }
+  
+    50% {
+      transform: scale(1.2); }
+  
+    100% {
+      transform: scale(1); } 
+}
+
+.tile-merged {
+    z-index: 20;
+    animation: pop 200ms ease 100ms;
+    animation-fill-mode: backwards; 
+}

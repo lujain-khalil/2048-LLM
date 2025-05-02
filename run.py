@@ -9,19 +9,19 @@ game = None
 def index():
     global game
     game = Game()
-    return render_template('index.html', grid=game.grid, move=game.last_move)
+    return render_template('index.html', grid=game.grid, move=game.last_move, score=game.score)
 
 @app.route('/update')
 def update():
     global game
     move = game.simulate_move()
-    return jsonify(move=game.last_move, grid=game.grid)
+    return jsonify(move=game.last_move, grid=game.grid, score=game.score, new_tile_position=game.new_tile_position)
 
 @app.route('/restart')
 def restart():
     global game
     game = Game()
-    return jsonify(grid=game.grid)
+    return jsonify(grid=game.grid, score=game.score, new_tile_position=game.new_tile_position)
 
 @app.route('/set_agent/<agent_name>')
 def set_agent(agent_name):

@@ -7,7 +7,7 @@ window.updateGrid = updateGrid;
 // Render initial grid and set up event listeners once the page loads.
 window.addEventListener("load", function() {
     if (window.initialGrid) {
-        updateGrid(window.initialGrid);
+        updateGrid(window.initialGrid, window.initialGrid, null);
     } else {
         console.error("Initial grid is not defined!");
     }

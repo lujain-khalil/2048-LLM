@@ -5,11 +5,14 @@ class Game:
     def __init__(self):
         self.reset_grid()
         self.agent = default_agent
+        self.new_tile_position = None
 
     def reset_grid(self):
         """Reset the grid with two new random tiles and clear last move."""
         self.grid = [[0 for _ in range(4)] for _ in range(4)]
-        self.last_move = ""
+        self.last_move = "NONE"
+        self.score = 0  # Initialize score
+        self.new_tile_position = None
         self.add_random_tile()
         self.add_random_tile()
 
@@ -19,6 +22,7 @@ class Game:
         if empty_cells:
             i, j = random.choice(empty_cells)
             self.grid[i][j] = 2 if random.random() < 0.9 else 4
+            self.new_tile_position = [i, j]  # Track position of new tile
 
     def merge_row_left(self, row):
         """
@@ -33,7 +37,9 @@ class Game:
                 skip = False
                 continue
             if i + 1 < len(filtered) and filtered[i] == filtered[i+1]:
-                merged.append(filtered[i] * 2)
+                merged_value = filtered[i] * 2
+                merged.append(merged_value)
+                self.score += merged_value  # Add merged value to score
                 skip = True
             else:
                 merged.append(filtered[i])
