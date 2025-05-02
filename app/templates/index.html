@@ -2,68 +2,166 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>2048 LLM Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 AI Playground</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div id="main-wrapper">
-        <div id="top-container">
-            <div id="title-container"></div>
-            
-            <!-- Score + Speed -->
-            <div id="score-block">
-                <div id="score-container">
-                    <div class="label">SCORE</div>
-                    <div id="score">0</div>
-                </div>
-                <select id="speed-select">
-                    <option value="slow">Slow</option>
-                    <option value="normal" selected>Normal</option>
-                    <option value="fast">Fast</option>
-                </select>
-            </div>
-            
-            <!-- Last Move + Agent -->
-            <div id="move-block">
-                <div id="last-move-container">
-                    <div class="label">LAST MOVE</div>
-                    <div id="move">{{ move }}</div>
-                </div>
-                <select id="agent-select">
-                    <option value="random" selected>Random</option>
-                    <option value="loop">Loop</option>
-                </select>
-            </div>
+    <div id="app-container">
+        <div id="header">
+            <h1>2048 AI Playground</h1>
         </div>
 
+        <div id="main-content">
+            <!-- Game Board Section -->
+            <div id="game-section">
+                <div id="game-header">
+                    <div id="title-container"></div>
+                    <div id="score-block">
+                        <div class="label">SCORE</div>
+                        <div id="score-container">{{ score }}</div>
+                    </div>
+                    <div id="move-block">
+                        <div class="label">LAST MOVE</div>
+                        <div id="last-move-container">{{ move }}</div>
+                    </div>
+                </div>
 
-        <div id="subheader-controls">
+                <div id="subheader-controls">
+                    <div id="subheader">
+                        <span>Watch AI play the game</span>
+                    </div>
+                    <div id="control-bar">
+                        <div id="agent-selector">
+                            <select id="agent-select">
+                                {% for agent_name in agents %}
+                                <option value="{{ agent_name }}" {% if agent_name == current_agent %}selected{% endif %}>{{ agent_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div id="speed-selector">
+                            <select id="speed-select">
+                                <option value="slow">Slow</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="fast">Fast</option>
+                            </select>
+                        </div>
+                        <div id="play-controls">
+                            <button id="pause-btn" title="Pause">⏸️</button>
+                            <button id="resume-btn" title="Resume" disabled>▶️</button>
+                            <button id="restart-btn" title="Restart">🔄</button>
+                        </div>
+                    </div>
+                </div>
 
-            <div id="subheader">Watch AI get to the 2048 tile!</div>
+                <div id="grid-container"></div>
+                <div id="game-over-message" style="display: none;">Game Over!</div>
+            </div>
 
-            <div id="control-bar">
-                <div id="play-controls">
-                    <button id="pause-btn" title="Pause">&#10073;&#10073;</button>
-                    <button id="resume-btn" title="Resume">&#9658;</button>
-                    <button id="restart-btn" title="Restart">&#x21BB;</button>
+            <!-- Simulation Controls Section -->
+            <div id="simulation-section">
+                <h2>Run AI Simulation</h2>
+                <div class="form-group">
+                    <label for="agent-select-sim">Select Algorithm:</label>
+                    <select id="agent-select-sim">
+                        {% for agent_name in agents %}
+                        <option value="{{ agent_name }}">{{ agent_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Algorithm explanation div -->
+                <div id="algorithm-explanation" class="explanation-box">
+                    <p>Select an algorithm to see its description.</p>
+                </div>
+
+                <div id="algorithm-params">
+                    <!-- A* and IDA* parameters -->
+                    <div class="algo-params" id="a_star-params" style="display: none;">
+                        <div class="form-group">
+                            <label for="depth-limit">Depth Limit:</label>
+                            <input type="number" id="depth-limit" value="3" min="1" max="10">
+                            <div class="param-explanation">Number of moves to look ahead in the search.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Expectimax parameters -->
+                    <div class="algo-params" id="expectimax-params" style="display: none;">
+                        <div class="form-group">
+                            <label for="depth">Search Depth:</label>
+                            <input type="number" id="depth" value="3" min="1" max="5">
+                            <div class="param-explanation">Number of moves to look ahead, including chance nodes.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- MCTS parameters -->
+                    <div class="algo-params" id="mcts-params" style="display: none;">
+                        <div class="form-group">
+                            <label for="iterations">Iterations:</label>
+                            <input type="number" id="iterations" value="100" min="10" max="1000">
+                            <div class="param-explanation">Number of search iterations to perform per move.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="rollout-depth">Rollout Depth:</label>
+                            <input type="number" id="rollout-depth" value="10" min="5" max="50">
+                            <div class="param-explanation">Maximum number of moves in each random simulation.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- TD Learning parameters -->
+                    <div class="algo-params" id="td_learning-params" style="display: none;">
+                        <div class="form-group">
+                            <label for="learning-rate">Learning Rate:</label>
+                            <input type="number" id="learning-rate" value="0.01" min="0.001" max="1" step="0.001">
+                            <div class="param-explanation">Rate at which the agent learns from new experiences (alpha).</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="discount-factor">Discount Factor:</label>
+                            <input type="number" id="discount-factor" value="0.95" min="0" max="1" step="0.01">
+                            <div class="param-explanation">Weight given to future rewards vs. immediate rewards (gamma).</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="epsilon">Epsilon:</label>
+                            <input type="number" id="epsilon" value="0.1" min="0" max="1" step="0.01">
+                            <div class="param-explanation">Probability of choosing a random move for exploration.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="num-games">Number of Games:</label>
+                    <input type="number" id="num-games" value="10" min="1" max="1000">
+                </div>
+
+                <div class="form-group">
+                    <button id="run-simulation-btn">Run Simulation</button>
+                    <button id="stop-simulation-btn" disabled>Stop Simulation</button>
+                </div>
+
+                <div id="simulation-status">
+                    <div class="label">Status:</div>
+                    <div id="simulation-status-display">Idle</div>
+                </div>
+
+                <div id="simulation-results">
+                    <div class="label">Results:</div>
+                    <pre id="simulation-results-display"></pre>
                 </div>
             </div>
         </div>
-        <div id="grid-container"></div>
     </div>
 
-    <script id="initial-grid" type="application/json">
-        {{ grid | tojson | safe }}
-    </script>
+    <!-- Hidden initial data -->
     <script>
-        try {
-            window.initialGrid = JSON.parse(document.getElementById("initial-grid").textContent.trim());
-        } catch (e) {
-            console.error("Error parsing initial grid JSON:", e);
-            window.initialGrid = null;
-        }
+        // Initialize global variables with data from server
+        window.initialGrid = {{ grid | tojson | safe }};
+        window.initialScore = {{ score | tojson | safe }};
+        window.initialMove = {{ move | tojson | safe }};
+        window.agents = {{ agents | tojson | safe }};
+        window.currentAgent = {{ current_agent | tojson | safe }};
     </script>
-    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 
+    <!-- Scripts -->
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
