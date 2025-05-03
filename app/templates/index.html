@@ -151,17 +151,25 @@
         </div>
     </div>
 
-    <!-- Hidden initial data -->
+    <script id="initial-grid" type="application/json">{{ grid | tojson | safe }}</script>
+    <script id="initial-score" type="application/json">{{ score | tojson | safe }}</script>
+    <script id="initial-move" type="application/json">{{ move | tojson | safe }}</script>
+    <script id="agents" type="application/json">{{ agents | tojson | safe }}</script>
+    <script id="current-agent" type="application/json">{{ current_agent | tojson | safe }}</script>
+
     <script>
-        // Initialize global variables with data from server
-        window.initialGrid = {{ grid | tojson | safe }};
-        window.initialScore = {{ score | tojson | safe }};
-        window.initialMove = {{ move | tojson | safe }};
-        window.agents = {{ agents | tojson | safe }};
-        window.currentAgent = {{ current_agent | tojson | safe }};
+        try {
+            window.initialGrid = JSON.parse(document.getElementById("initial-grid").textContent.trim());
+            window.initialScore = JSON.parse(document.getElementById("initial-score").textContent.trim());
+            window.initialMove = JSON.parse(document.getElementById("initial-move").textContent.trim());
+            window.agents = JSON.parse(document.getElementById("agents").textContent.trim());
+            window.currentAgent = JSON.parse(document.getElementById("current-agent").textContent.trim());
+        } catch (e) {
+            console.error("Error parsing initial grid JSON:", e);
+            window.initialGrid = null;
+        }
     </script>
 
-    <!-- Scripts -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
