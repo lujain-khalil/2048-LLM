@@ -1,5 +1,5 @@
 import random
-from agents.registry import get_agent
+from agents.registry import get_agent, list_agents
 from simulation.game_utils import simulate_move_on_grid, get_empty_cells, is_terminal as is_terminal_static
 
 class Game:
