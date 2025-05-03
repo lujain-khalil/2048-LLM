@@ -48,7 +48,6 @@ export function restartGame() {
     fetch('/restart')
         .then(response => response.json())
         .then(data => {
-            previousGrid = createEmptyGrid();  // Reset to empty grid instead of null
             window.updateGrid(data.grid, previousGrid, data.new_tile_position);  // Pass new_tile_position
             document.getElementById("move").innerText = "NONE";
             document.getElementById("score").innerText = data.score;

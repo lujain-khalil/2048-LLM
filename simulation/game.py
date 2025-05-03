@@ -11,10 +11,10 @@ class Game:
         """Reset the grid with two new random tiles and clear last move."""
         self.grid = [[0 for _ in range(4)] for _ in range(4)]
         self.last_move = "NONE"
-        self.score = 0  # Initialize score
+        self.score = 0
+        self.add_random_tile()
+        self.add_random_tile()
         self.new_tile_position = None
-        self.add_random_tile()
-        self.add_random_tile()
 
     def add_random_tile(self):
         """Add a new tile (2 or 4) at a random empty cell."""
