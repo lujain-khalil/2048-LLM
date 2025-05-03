@@ -21,11 +21,11 @@ window.addEventListener("load", function() {
     
     // Speed control dropdown.
     document.getElementById("speed-select").addEventListener("change", function() {
-        changeSpeed(this.value);  // Correct context
+        changeSpeed(this.value);
     });
 
     // Agent control dropdown.
     document.getElementById("agent-select").addEventListener("change", function() {
-        changeAgent(this.value);  // Correct context
+        changeAgent(this.value);
     });
 });
