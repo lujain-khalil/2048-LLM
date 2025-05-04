@@ -1,5 +1,5 @@
 import random
-from agents.registry import get_agent, list_agents
+from agents.registry import get_agent, get_agent_with_params, list_agents
 from simulation.game_utils import simulate_move_on_grid, get_empty_cells, is_terminal as is_terminal_static
 import traceback
 
@@ -20,6 +20,8 @@ class Game:
                  raise ImportError("No agents found in registry. Cannot initialize Game.")
         
         self.agent_class = agent_class
+        self.agent_name = default_agent_name
+        self.agent_params = None
         self.agent = None
         self.reset_grid()
 
@@ -32,7 +34,10 @@ class Game:
         self.add_random_tile()
         # Ensure agent is instantiated *after* the grid is initialized
         if self.agent_class:
-            self.agent = self.agent_class(self)
+            # Use centralized parameter handling
+            self.agent = get_agent_with_params(self.agent_name, self, self.agent_params)
+            if not self.agent:
+                raise Exception(f"Failed to instantiate agent '{self.agent_name}' with params {self.agent_params}")
         else:
              # This indicates a problem during __init__
              raise Exception("Agent class not set during Game initialization.")
@@ -122,14 +127,15 @@ class Game:
             game_over = self.is_game_over()
             return None, False, game_over, self.score
 
-    def set_agent(self, agent_name):
+    def set_agent(self, agent_name, agent_params=None):
         """Set the agent class by name using the registry."""
-        agent_class = get_agent(agent_name)
-        if agent_class:
-            self.agent_class = agent_class
-            print(f"Agent class set to: {agent_name}")
+        self.agent_name = agent_name
+        self.agent_params = agent_params
+        self.agent_class = get_agent(agent_name)
+        
+        if self.agent_class:
+            print(f"Agent class set to: {agent_name} with params: {agent_params}")
             # Agent instance will be created/updated on next reset_grid()
-            # Or force reset here? self.reset_grid() - might be unexpected
             return True
         else:
             print(f"Error: Agent class '{agent_name}' not found in registry: {list_agents()}")

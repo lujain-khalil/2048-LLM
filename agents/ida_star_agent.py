@@ -7,12 +7,12 @@ import math
 @register_agent('ida_star')
 class IDAStarAgent(Agent):
     """Agent that uses Iterative Deepening A* search."""
-    def __init__(self, game, initial_depth_limit=1, max_overall_depth=5):
+    def __init__(self, game, initial_depth_limit=None, max_overall_depth=None):
         super().__init__(game)
         # Note: IDA* doesn't strictly use depth limit like A*, but cost limit.
         # We simulate depth limits for simplicity, but a true IDA* uses f-cost limit.
-        self.initial_depth_limit = initial_depth_limit
-        self.max_overall_depth = max_overall_depth # Safety limit
+        self.initial_depth_limit = initial_depth_limit if initial_depth_limit is not None else 1
+        self.max_overall_depth = max_overall_depth if max_overall_depth is not None else 5  # Safety limit
 
     def get_move(self):
         initial_grid = self.game.grid

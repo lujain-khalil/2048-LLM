@@ -53,7 +53,31 @@ def restart():
 def set_agent():
     data = request.get_json()
     agent_name = data.get('agent_name')
-    if game_instance.set_agent(agent_name):
+    
+    # Extract agent-specific parameters from the request
+    agent_params = {}
+    for key, value in data.items():
+        # Skip non-parameter fields
+        if key != 'agent_name':
+            try:
+                # Try to convert string values to appropriate types
+                if isinstance(value, str):
+                    if value.isdigit():
+                        agent_params[key] = int(value)
+                    elif value.replace('.', '', 1).isdigit():
+                        agent_params[key] = float(value)
+                    else:
+                        agent_params[key] = value
+                else:
+                    agent_params[key] = value
+            except (ValueError, TypeError):
+                # If conversion fails, use the original value
+                agent_params[key] = value
+    
+    # Only pass agent_params if they exist
+    params = agent_params if agent_params else None
+    
+    if game_instance.set_agent(agent_name, params):
         game_instance.reset_grid()
         return jsonify(status="ok", agent=agent_name, grid=game_instance.grid, score=game_instance.score)
     else:
@@ -76,41 +100,26 @@ def run_simulation_endpoint():
     wandb_project = data.get('wandb_project') or os.getenv("WANDB_PROJECT")
     wandb_entity = data.get('wandb_entity') or os.getenv("WANDB_ENTITY")
 
-    # Get algorithm-specific parameters
+    # Get agent-specific parameters - pass all parameters from the request
+    # without hardcoding algorithm-specific parameter names
     agent_params = {}
-    
-    # A* and IDA* parameters
-    if agent_name in ['a_star', 'ida_star']:
-        depth_limit = data.get('depth_limit')
-        if depth_limit:
-            agent_params['depth_limit'] = int(depth_limit)
-    
-    # MCTS parameters
-    elif agent_name == 'mcts':
-        iterations = data.get('iterations')
-        rollout_depth = data.get('rollout_depth')
-        if iterations:
-            agent_params['iterations'] = int(iterations)
-        if rollout_depth:
-            agent_params['rollout_depth'] = int(rollout_depth)
-    
-    # Expectimax parameters
-    elif agent_name == 'expectimax':
-        depth = data.get('depth')
-        if depth:
-            agent_params['search_depth'] = int(depth)
-    
-    # TD Learning parameters
-    elif agent_name == 'td_learning':
-        learning_rate = data.get('learning_rate')
-        discount_factor = data.get('discount_factor')
-        epsilon = data.get('epsilon')
-        if learning_rate:
-            agent_params['learning_rate'] = float(learning_rate)
-        if discount_factor:
-            agent_params['discount_factor'] = float(discount_factor)
-        if epsilon:
-            agent_params['epsilon'] = float(epsilon)
+    for key, value in data.items():
+        # Skip non-parameter fields
+        if key not in ['agent_name', 'num_games', 'wandb_project', 'wandb_entity']:
+            try:
+                # Try to convert string values to appropriate types
+                if isinstance(value, str):
+                    if value.isdigit():
+                        agent_params[key] = int(value)
+                    elif value.replace('.', '', 1).isdigit():
+                        agent_params[key] = float(value)
+                    else:
+                        agent_params[key] = value
+                else:
+                    agent_params[key] = value
+            except (ValueError, TypeError):
+                # If conversion fails, use the original value
+                agent_params[key] = value
 
     if not agent_name or agent_name not in list_agents():
         return jsonify(status="error", message="Invalid agent name provided."), 400
