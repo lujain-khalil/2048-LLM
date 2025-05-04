@@ -1,6 +1,7 @@
 import random
 from agents.registry import get_agent, list_agents
 from simulation.game_utils import simulate_move_on_grid, get_empty_cells, is_terminal as is_terminal_static
+import traceback
 
 class Game:
     def __init__(self):
@@ -79,25 +80,47 @@ class Game:
              # This might happen if agent fails to instantiate in reset_grid
              raise Exception("Agent not initialized! Cannot simulate move.")
 
-        move = self.agent.get_move()
-        # Ensure move is valid before proceeding? (Optional, agents should return valid)
-        if move not in ["UP", "DOWN", "LEFT", "RIGHT"]:
-            print(f"Warning: Agent returned invalid move '{move}'. Skipping turn.")
-            # Decide how to handle - return current state? Or raise error?
-            # Returning current state might be safer for simulation loop
-            game_over = self.is_game_over()
-            return move, False, game_over, self.score
+        # First check if the game is already over (no valid moves)
+        if self.is_game_over():
+            self.last_move = "GAME OVER - No valid moves"
+            return None, False, True, self.score
+
+        try:
+            move = self.agent.get_move()
             
-        moved = self.move_grid(move)
+            # Ensure move is valid
+            if move not in ["UP", "DOWN", "LEFT", "RIGHT"]:
+                error_msg = f"Invalid move '{move}' returned by agent"
+                self.last_move = f"ERROR: {error_msg}"
+                game_over = self.is_game_over()
+                return None, False, game_over, self.score
+                
+            moved = self.move_grid(move)
 
-        if moved:
-            self.add_random_tile()
-            self.last_move = move
-        else:
-             self.last_move = f"{move} (invalid)"
+            if moved:
+                self.add_random_tile()
+                self.last_move = move
+            else:
+                # This should not happen anymore with our improved logic,
+                # but we keep it as a safeguard
+                self.last_move = f"{move} (invalid - no change in grid)"
 
-        game_over = self.is_game_over()
-        return move, moved, game_over, self.score
+            game_over = self.is_game_over()
+            return move, moved, game_over, self.score
+            
+        except Exception as e:
+            # Log the error
+            error_msg = str(e)
+            traceback_str = traceback.format_exc()
+            print(f"Agent error: {error_msg}")
+            print(traceback_str)
+            
+            # Set error as last move for UI display
+            self.last_move = f"ERROR: {error_msg[:50]}..."
+            
+            # Return error state without moving
+            game_over = self.is_game_over()
+            return None, False, game_over, self.score
 
     def set_agent(self, agent_name):
         """Set the agent class by name using the registry."""
