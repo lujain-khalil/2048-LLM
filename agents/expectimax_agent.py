@@ -7,7 +7,7 @@ import math
 @register_agent('expectimax')
 class ExpectimaxAgent(Agent):
     """Agent using the Expectimax algorithm to handle randomness."""
-    def __init__(self, game, depth=3):
+    def __init__(self, game, depth=2):
         super().__init__(game)
         self.search_depth = depth
 
@@ -93,5 +93,3 @@ class ExpectimaxAgent(Agent):
             expected_value += prob_4 * self._max_node(grid_with_4, score, depth)
 
         return expected_value
-
-    # Removed local _is_terminal, using imported version 

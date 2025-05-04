@@ -14,7 +14,7 @@ DEFAULT_PARAMS = {
         'max_overall_depth': 5
     },
     'expectimax': {
-        'search_depth': 3
+        'depth': 2
     },
     'mcts': {
         'iterations': 100,

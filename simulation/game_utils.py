@@ -1,6 +1,6 @@
 import math
 import random
-
+import copy 
 # --- Static Game Logic Helpers ---
 
 def merge_row_left_static(row):
@@ -72,68 +72,42 @@ def simulate_move_on_grid(grid, direction):
     changed = new_grid != original_grid
     return new_grid, move_score, changed
 
-def calculate_heuristic(grid, score): # Keep score for compatibility if needed, but unused
-    """ Calculates a heuristic value for a given grid state. Higher is better. """
-    empty_cells = 0
-    monotonicity_score = 0
-    smoothness_score = 0
-    max_tile_val = 0
-    max_tile_pos = (0, 0)
+import math
 
-    # Precompute log values (log2 of 0 is undefined, use -1 or small value)
-    log_grid = [[math.log2(grid[r][c]) if grid[r][c] > 0 else 0 for c in range(4)] for r in range(4)]
+def calculate_heuristic(grid, score=None):
+    """
+    Composite 2048 heuristic:
+      • empty‐cell bonus (decaying)
+      • snake‐pattern gradient
+    """
+    empty_term = empty_score(grid, 100)
+    snake_term = snake_weight_score(grid)
 
-    for r in range(4):
-        for c in range(4):
-            if grid[r][c] == 0:
-                empty_cells += 1
-            else:
-                # Find max tile value and position
-                if grid[r][c] > max_tile_val:
-                    max_tile_val = grid[r][c]
-                    max_tile_pos = (r, c)
+    return empty_term + snake_term
 
-                # Smoothness (difference between adjacent tiles)
-                current_log_val = log_grid[r][c]
-                if c + 1 < 4 and grid[r][c+1] != 0:
-                    neighbor_log_val = log_grid[r][c+1]
-                    smoothness_score -= abs(current_log_val - neighbor_log_val)
-                if r + 1 < 4 and grid[r+1][c] != 0:
-                    neighbor_log_val = log_grid[r+1][c]
-                    smoothness_score -= abs(current_log_val - neighbor_log_val)
 
-    # Monotonicity: Penalize increases from left->right and top->bottom
-    mono_penalty_lr = 0
-    mono_penalty_ud = 0
-    for r in range(4):
-        for c in range(3):
-            if log_grid[r][c+1] > log_grid[r][c]:
-                mono_penalty_lr += log_grid[r][c+1] - log_grid[r][c]
-    for c in range(4):
-         for r in range(3):
-             if log_grid[r+1][c] > log_grid[r][c]:
-                mono_penalty_ud += log_grid[r+1][c] - log_grid[r][c]
+def empty_score(grid, weight=1):
+    """Weight × number of zeros; weight shrinks as tiles grow."""
+    empty = sum(1 for row in grid for cell in row if cell == 0)
+    return weight * empty
 
-    # Max tile bonus
-    max_tile_log = math.log2(max_tile_val) if max_tile_val > 0 else 0
-    corner_bonus = 0
-    if max_tile_pos == (0, 0):
-        corner_bonus = max_tile_log * 0.5
 
-    w_empty = 2.7
-    w_smooth = 0.2
-    w_mono = 1.0
-    w_max_tile = 1.0
-    w_corner = 2.0
+def snake_weight_score(grid, weight=1):
+    """
+    Apply snake-shaped positional weights.
+    """
+    W = [
+        [4**15, 4**14, 4**13, 4**12],
+        [4**8,  4**9,  4**10, 4**11],
+        [4**7,  4**6,   4**5,  4**4],
+        [4**0,  4**1,   4**2,  4**3]
+    ]
+    score = 0
+    for i in range(4):
+        for j in range(4):
+            score += grid[i][j] * W[i][j]
+    return score * weight
 
-    heuristic = (
-        empty_cells * w_empty +
-        smoothness_score * w_smooth -
-        (mono_penalty_lr + mono_penalty_ud) * w_mono +
-        max_tile_log * w_max_tile +
-        corner_bonus * w_corner
-    )
-    return heuristic
 
 def get_empty_cells(grid):
     """ Returns a list of (row, col) tuples for empty cells. """
