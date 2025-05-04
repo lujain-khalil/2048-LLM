@@ -47,25 +47,31 @@ class LLMBaseAgent(Agent):
         return grid_str
     
     def create_prompt(self):
-        """Create a prompt for the LLM including the game state and valid moves."""
+        """Create a prompt for the LLM including the game state, valid moves, 
+        and high-level strategy guidance based on the 2048 heuristics paper."""
         grid_str = self.get_grid_representation()
         valid_moves = self.get_valid_moves()
+        valid_moves_str = ", ".join(valid_moves) if valid_moves else "UP, DOWN, LEFT, RIGHT"
         
-        # If there are no valid moves, game would be over but prompt should still have a response format
-        valid_moves_str = ", ".join(valid_moves) if valid_moves else "UP, DOWN, LEFT, RIGHT (though none will change the grid)"
-        
-        prompt = f"""You are controlling a 2048 game. Here's the current grid:
+        prompt = f"""
+You are controlling a 2048 game. Your ultimate goal is to reach the 2048 tile in as few moves as possible.
+
+Strategy guidelines:
+1. **Maximize empty tiles first**: always prefer the move that yields the greatest number of empty spaces on the board.
+2. **Then maximize monotonicity**: among ties, choose the move that makes the grid more monotonic (higher values clustered in one corner, with rows and columns non-increasing).
+3. Only if still tied, choose at random.
+
+Here’s the current grid (0s shown as “_”):
 
 {grid_str}
-
 Current score: {self.game.score}
 
-Valid moves (that will change the grid): {valid_moves_str}
+Valid moves: {valid_moves_str}
 
-Analyze the grid and choose the best move from the valid options.
-Respond with exactly one of these words: {valid_moves_str}.
+Given these guidelines, pick **exactly one** of the valid moves—UP, DOWN, LEFT, or RIGHT—and reply with that word only.
 """
         return prompt
+
     
     def get_move(self):
         """Get the next move by querying the LLM, ensuring only valid moves are used."""

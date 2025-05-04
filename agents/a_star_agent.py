@@ -1,99 +1,136 @@
+import random
+import copy
 from agents.agent import Agent
 from agents.registry import register_agent
 from simulation.game_utils import simulate_move_on_grid, calculate_heuristic
-import heapq
-import copy
-import math
 
 @register_agent('a_star')
 class AStarAgent(Agent):
-    """Agent that uses A* search to find the best move sequence within a limited depth."""
+    """Agent that evaluates moves based on heuristics including empty tiles and monotonicity."""
     def __init__(self, game, depth_limit=3):
         super().__init__(game)
-        self.depth_limit = depth_limit # Max number of moves to look ahead
+        self.moves = ["UP", "RIGHT", "DOWN", "LEFT"]
+        self.depth_limit = depth_limit
 
     def get_move(self):
-        initial_grid = self.game.grid
-        initial_score = self.game.score
-        
+        """Use heuristic evaluation to find the best move."""
         valid_moves = self.get_valid_moves()
         
         # If there are no valid moves, the game should be over
         if not valid_moves:
             raise ValueError("No valid moves available - game should be over")
-
-        best_move = None
-        best_value = -float('inf')
-
-        # A* search for each initial valid move
-        for first_move in valid_moves:
-            sim_grid, sim_score_increase, _ = simulate_move_on_grid(initial_grid, first_move)
-            
-            # Use negative heuristic because heapq is a min-heap
-            # Start A* from the state resulting from the first move
-            start_node_value = -calculate_heuristic(sim_grid, initial_score + sim_score_increase)
-            # state = (grid, current_score, depth, current_move_sequence)
-            start_node = (start_node_value, tuple(map(tuple, sim_grid)), initial_score + sim_score_increase, 1, [first_move])
-            
-            final_value = self._a_star_search(start_node)
-            
-            # Remember the first move that led to the best outcome found by A*
-            if -final_value > best_value: # Compare positive heuristic values
-                best_value = -final_value
-                best_move = first_move
-
-        # Fallback if no improving move is found (all moves lead to worse states)
-        if best_move is None and valid_moves:
-            best_move = valid_moves[0]
-
-        return best_move
-
-    def _a_star_search(self, start_node):
-        """ Performs A* search starting from a node representing the state after the first move. """
-        # Priority queue stores: (f_cost, grid, score, depth, path)
-        # f_cost = g + h, where g is -(current_score) or depth, h is -heuristic
-        # We'll use g = depth for simplicity here.
-        open_set = [start_node] # Use list as min-heap via heapq
-        closed_set = set() # Stores tuples of grids to avoid cycles
         
-        best_terminal_heuristic = -float('inf')
+        best_moves = []
+        best_score = float('-inf')
+        current_grid = self.game.grid
+        current_score = self.game.score
 
-        while open_set:
-            f_cost_neg, current_grid_tuple, current_score, depth, path = heapq.heappop(open_set)
-            
-            # grid tuple is already frozen from initial node and loop below
-            if current_grid_tuple in closed_set:
+        # Try each valid move
+        for move in valid_moves:
+            # Simulate the move using the utility function
+            sim_grid, score_increase, changed = simulate_move_on_grid(current_grid, move)
+            if not changed:
                 continue
-            closed_set.add(current_grid_tuple)
-            
-            # Convert back to list of lists for heuristic calculation
-            current_grid_list = [list(row) for row in current_grid_tuple]
-            # Use util function
-            current_heuristic = calculate_heuristic(current_grid_list, current_score)
-            best_terminal_heuristic = max(best_terminal_heuristic, current_heuristic)
-
-            if depth >= self.depth_limit:
-                continue # Stop searching deeper
-
-            # Get valid moves for this grid state
-            for move in ["UP", "DOWN", "LEFT", "RIGHT"]:
-                # Use util function
-                next_grid_list, score_increase, changed = simulate_move_on_grid(current_grid_list, move)
-                if not changed:
-                    continue
-
-                next_grid_tuple = tuple(map(tuple, next_grid_list))
-                if next_grid_tuple in closed_set:
-                     continue
-
-                next_score = current_score + score_increase
-                # Use util function
-                h_cost_neg = -calculate_heuristic(next_grid_list, next_score)
-                g_cost = depth + 1 # Cost increases with depth
-                f_cost_neg = g_cost + h_cost_neg # A* cost function (using negative h)
-
-                heapq.heappush(open_set, (f_cost_neg, next_grid_tuple, next_score, depth + 1, path + [move]))
                 
-        # The search explores possibilities starting from the first move.
-        # Return the best heuristic value found at any terminal node reached from that starting move.
-        return -best_terminal_heuristic # Return positive heuristic value 
+            # For deeper search
+            if self.depth_limit > 1:
+                # Use path tracking for cycle detection
+                path = [(tuple(map(tuple, sim_grid)), current_score + score_increase)]
+                score = self._depth_limited_search(sim_grid, current_score + score_increase, 1, self.depth_limit, path)
+            else:
+                # Original single-ply evaluation
+                score = self._evaluate_position(sim_grid)
+            
+            if score > best_score:
+                best_score = score
+                best_moves = [move]
+            elif score == best_score:
+                best_moves.append(move)
+
+        # If multiple moves have the same score, choose randomly
+        if best_moves:
+            return random.choice(best_moves)
+        else:
+            # This should never happen since we checked for valid moves,
+            # but return a valid move as a fallback
+            return valid_moves[0]
+            
+    def _depth_limited_search(self, current_grid, current_score, depth, depth_limit, path):
+        """Recursive depth-limited search for multi-ply lookahead."""
+        # Get the heuristic value for the current state
+        current_heuristic = calculate_heuristic(current_grid, current_score)
+        
+        # If we've reached the depth limit, return the heuristic
+        if depth >= depth_limit:
+            return current_heuristic
+            
+        max_heuristic_found = current_heuristic
+        
+        # Try each possible move from here
+        for move in ["UP", "DOWN", "LEFT", "RIGHT"]:
+            next_grid, score_increase, changed = simulate_move_on_grid(current_grid, move)
+            if not changed:
+                continue
+                
+            next_grid_tuple = tuple(map(tuple, next_grid))
+            next_score = current_score + score_increase
+            
+            # Cycle detection
+            if any(state[0] == next_grid_tuple for state in path):
+                continue
+                
+            # Add to path and recurse
+            path.append((next_grid_tuple, next_score))
+            result_heuristic = self._depth_limited_search(next_grid, next_score, depth + 1, depth_limit, path)
+            path.pop()  # Backtrack
+            
+            max_heuristic_found = max(max_heuristic_found, result_heuristic)
+            
+        return max_heuristic_found
+
+    def _evaluate_position(self, grid):
+        """
+        Evaluate the current position using multiple heuristics:
+        1. Number of empty tiles
+        2. Monotonicity of rows and columns
+        """
+        # Count empty tiles (weight: 1.0)
+        empty_count = sum(1 for row in grid for cell in row if cell == 0)
+        empty_score = empty_count
+
+        # Calculate monotonicity score (weight: 2.0)
+        monotonicity_score = self._calculate_monotonicity(grid) * 2.0
+
+        return empty_score + monotonicity_score
+
+    def _calculate_monotonicity(self, grid):
+        """
+        Calculate how monotonic the grid is (either increasing or decreasing)
+        both horizontally and vertically.
+        """
+        total_score = 0
+        
+        # Check rows
+        for row in grid:
+            # Check left-to-right monotonicity
+            lr_mon = all(row[i] <= row[i+1] for i in range(len(row)-1) if row[i+1] != 0)
+            # Check right-to-left monotonicity
+            rl_mon = all(row[i] >= row[i+1] for i in range(len(row)-1) if row[i] != 0)
+            total_score += 1 if lr_mon or rl_mon else 0
+
+        # Check columns
+        for j in range(4):
+            column = [grid[i][j] for i in range(4)]
+            # Check top-to-bottom monotonicity
+            tb_mon = all(column[i] <= column[i+1] for i in range(len(column)-1) if column[i+1] != 0)
+            # Check bottom-to-top monotonicity
+            bt_mon = all(column[i] >= column[i+1] for i in range(len(column)-1) if column[i] != 0)
+            total_score += 1 if tb_mon or bt_mon else 0
+
+        # Additional bonus for highest value in corner
+        corners = [grid[0][0], grid[0][3], grid[3][0], grid[3][3]]
+        max_val = max(max(row) for row in grid)
+        if max_val in corners:
+            total_score += 2
+
+        return total_score 
