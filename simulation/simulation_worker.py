@@ -62,12 +62,13 @@ def run_simulation_worker(agent_name, num_games, wandb_project, wandb_entity, ag
         if not sim_game.set_agent(agent_name):
              raise ValueError(f"Agent '{agent_name}' not found for simulation.")
         
-        # Apply agent-specific parameters if provided
-        if agent_params and hasattr(sim_game.agent, '__dict__'):
-            for key, value in agent_params.items():
-                if hasattr(sim_game.agent, key):
-                    setattr(sim_game.agent, key, value)
-                    print(f"Set agent parameter {key} = {value}")
+        # Apply agent-specific parameters by using the centralized approach
+        # rather than setting them directly
+        if agent_params:
+            # Reset the grid with the agent parameters
+            if not sim_game.set_agent(agent_name, agent_params):
+                raise ValueError(f"Failed to set agent '{agent_name}' with params {agent_params}")
+            sim_game.reset_grid()  # Instantiate the agent with the parameters
 
         all_scores = []
         all_max_tiles = []

@@ -7,10 +7,10 @@ from simulation.game_utils import simulate_move_on_grid, calculate_heuristic
 @register_agent('a_star')
 class AStarAgent(Agent):
     """Agent that evaluates moves based on heuristics including empty tiles and monotonicity."""
-    def __init__(self, game, depth_limit=3):
+    def __init__(self, game, depth_limit=None):
         super().__init__(game)
         self.moves = ["UP", "RIGHT", "DOWN", "LEFT"]
-        self.depth_limit = depth_limit
+        self.depth_limit = depth_limit if depth_limit is not None else 1
 
     def get_move(self):
         """Use heuristic evaluation to find the best move."""
