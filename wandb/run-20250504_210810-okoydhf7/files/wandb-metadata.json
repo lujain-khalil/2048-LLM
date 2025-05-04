@@ -1,0 +1,44 @@
+{
+  "os": "macOS-15.4.1-arm64-arm-64bit",
+  "python": "CPython 3.11.0",
+  "startedAt": "2025-05-04T17:08:10.137877Z",
+  "program": "/Users/medhatabouzeid/Documents/Emaar/_ai/2048-LLM/run.py",
+  "codePath": "run.py",
+  "git": {
+    "remote": "https://github.com/lujain-khalil/2048-LLM.git",
+    "commit": "96680880609f6afca2f88580846d9864087b31f9"
+  },
+  "email": "medhat.tarek1000@gmail.com",
+  "root": "/Users/medhatabouzeid/Documents/Emaar/_ai/2048-LLM",
+  "host": "Medhats-MacBook-Pro.local",
+  "executable": "/Users/medhatabouzeid/Documents/Emaar/_ai/2048-LLM/.venv/bin/python3",
+  "codePathLocal": "run.py",
+  "cpu_count": 14,
+  "cpu_count_logical": 14,
+  "disk": {
+    "/": {
+      "total": "994662584320",
+      "used": "504657874944"
+    },
+    "/System/Volumes/Data": {
+      "total": "994662584320",
+      "used": "504657874944"
+    }
+  },
+  "memory": {
+    "total": "38654705664"
+  },
+  "cpu": {
+    "count": 14,
+    "countLogical": 14
+  },
+  "apple": {
+    "name": "Apple M3 Max",
+    "ecpuCores": 4,
+    "pcpuCores": 10,
+    "gpuCores": 30,
+    "memoryGb": 36,
+    "swapTotalBytes": "1073741824",
+    "ramTotalBytes": "38654705664"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "os": "macOS-15.4.1-arm64-arm-64bit",
+  "python": "CPython 3.11.0",
+  "startedAt": "2025-05-04T08:31:14.540799Z",
+  "program": "/Users/medhatabouzeid/Documents/Emaar/_ai/2048-LLM/run.py",
+  "codePath": "run.py",
+  "git": {
+    "remote": "https://github.com/lujain-khalil/2048-LLM.git",
+    "commit": "96680880609f6afca2f88580846d9864087b31f9"
+  },
+  "email": "medhat.tarek1000@gmail.com",
+  "root": "/Users/medhatabouzeid/Documents/Emaar/_ai/2048-LLM",
+  "host": "Medhats-MacBook-Pro.local",
+  "executable": "/Users/medhatabouzeid/Documents/Emaar/_ai/2048-LLM/.venv/bin/python3",
+  "codePathLocal": "run.py"
+}
