@@ -7,9 +7,17 @@ class RandomAgent(Agent):
     # __init__ is inherited from Agent, so self.game is available
 
     def get_move(self):
-        # The game state (self.game.grid) isn't needed for random moves,
-        # but other agents will use it.
-        return random.choice(["UP", "RIGHT", "DOWN", "LEFT"])
+        """
+        Return a random valid move.
+        Only considers moves that would change the grid.
+        """
+        valid_moves = self.get_valid_moves()
+        
+        # If there are no valid moves, the game should be over
+        if not valid_moves:
+            raise ValueError("No valid moves available - game should be over")
+            
+        return random.choice(valid_moves)
 
 # Removed the instance creation here. Instantiation will happen
 # when the simulation selects the agent.

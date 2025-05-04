@@ -12,33 +12,29 @@ class ExpectimaxAgent(Agent):
         self.search_depth = depth
 
     def get_move(self):
+        valid_moves = self.get_valid_moves()
+        
+        # If there are no valid moves, the game should be over
+        if not valid_moves:
+            raise ValueError("No valid moves available - game should be over")
+            
         best_move = None
         best_value = -float('inf')
-        possible_moves = ["UP", "DOWN", "LEFT", "RIGHT"]
 
         current_grid = self.game.grid
         current_score = self.game.score
 
-        for move in possible_moves:
-            sim_grid, score_increase, changed = simulate_move_on_grid(current_grid, move)
-            if not changed:
-                continue
-
+        for move in valid_moves:
+            sim_grid, score_increase, _ = simulate_move_on_grid(current_grid, move)
             value = self._chance_node(sim_grid, current_score + score_increase, self.search_depth)
 
             if value > best_value:
                 best_value = value
                 best_move = move
 
-        # Fallback
-        if best_move is None:
-            for move in possible_moves:
-                 _, _, changed = simulate_move_on_grid(current_grid, move)
-                 if changed:
-                     best_move = move
-                     break
-            if best_move is None:
-                 best_move = "UP"
+        # Fallback if no move is found (shouldn't happen since we checked for valid moves)
+        if best_move is None and valid_moves:
+            best_move = valid_moves[0]
         
         return best_move
 
@@ -48,22 +44,22 @@ class ExpectimaxAgent(Agent):
             return calculate_heuristic(grid, score)
 
         max_value = -float('inf')
-        possible_moves = ["UP", "DOWN", "LEFT", "RIGHT"]
-
-        for move in possible_moves:
-            sim_grid, score_increase, changed = simulate_move_on_grid(grid, move)
-            if changed:
-                # After the player moves, it's the environment's turn (CHANCE node)
-                max_value = max(max_value, self._chance_node(sim_grid, score + score_increase, depth - 1))
-            else:
-                # If a move is invalid, consider its value based on the current state's heuristic?
-                # Or treat it as very bad? For simplicity, we can ignore invalid moves if at least one valid move exists.
-                # If NO valid move exists from this state, the _is_terminal check should handle it.
-                pass
         
-        # If no move changed the board (should be caught by _is_terminal)
-        if max_value == -float('inf'):
+        # Get valid moves for this grid state
+        valid_moves = []
+        for move in ["UP", "DOWN", "LEFT", "RIGHT"]:
+            _, _, changed = simulate_move_on_grid(grid, move)
+            if changed:
+                valid_moves.append(move)
+        
+        # If no valid moves, this is a terminal state
+        if not valid_moves:
             return calculate_heuristic(grid, score)
+
+        for move in valid_moves:
+            sim_grid, score_increase, _ = simulate_move_on_grid(grid, move)
+            # After the player moves, it's the environment's turn (CHANCE node)
+            max_value = max(max_value, self._chance_node(sim_grid, score + score_increase, depth - 1))
             
         return max_value
 

@@ -15,16 +15,19 @@ class AStarAgent(Agent):
     def get_move(self):
         initial_grid = self.game.grid
         initial_score = self.game.score
-        possible_moves = ["UP", "DOWN", "LEFT", "RIGHT"]
+        
+        valid_moves = self.get_valid_moves()
+        
+        # If there are no valid moves, the game should be over
+        if not valid_moves:
+            raise ValueError("No valid moves available - game should be over")
 
         best_move = None
         best_value = -float('inf')
 
-        # A* search for each initial possible move
-        for first_move in possible_moves:
-            sim_grid, sim_score_increase, changed = simulate_move_on_grid(initial_grid, first_move)
-            if not changed:
-                continue # Skip invalid first moves
+        # A* search for each initial valid move
+        for first_move in valid_moves:
+            sim_grid, sim_score_increase, _ = simulate_move_on_grid(initial_grid, first_move)
             
             # Use negative heuristic because heapq is a min-heap
             # Start A* from the state resulting from the first move
@@ -39,15 +42,9 @@ class AStarAgent(Agent):
                 best_value = -final_value
                 best_move = first_move
 
-        # Fallback if no valid/improving move is found (similar to Greedy BFS)
-        if best_move is None:
-            for move in possible_moves:
-                 _, _, changed = simulate_move_on_grid(initial_grid, move)
-                 if changed:
-                     best_move = move
-                     break
-            if best_move is None:
-                 best_move = "UP"
+        # Fallback if no improving move is found (all moves lead to worse states)
+        if best_move is None and valid_moves:
+            best_move = valid_moves[0]
 
         return best_move
 
@@ -78,6 +75,7 @@ class AStarAgent(Agent):
             if depth >= self.depth_limit:
                 continue # Stop searching deeper
 
+            # Get valid moves for this grid state
             for move in ["UP", "DOWN", "LEFT", "RIGHT"]:
                 # Use util function
                 next_grid_list, score_increase, changed = simulate_move_on_grid(current_grid_list, move)

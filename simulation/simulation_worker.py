@@ -105,9 +105,15 @@ def run_simulation_worker(agent_name, num_games, wandb_project, wandb_entity, ag
                     break
                     
                 decision_start_time = time.perf_counter()
-                _, moved, game_over, _ = sim_game.simulate_move()
+                move, moved, game_over, _ = sim_game.simulate_move()
                 decision_end_time = time.perf_counter()
                 decision_times_this_game.append(decision_end_time - decision_start_time)
+
+                # If the agent encountered an error (move is None), terminate this game
+                if move is None:
+                    print(f"Agent error in game {i+1}: {sim_game.last_move}")
+                    game_over = True
+                    continue
 
                 # Sample memory usage periodically during the game
                 if moves_count % 10 == 0:

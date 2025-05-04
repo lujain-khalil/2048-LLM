@@ -78,54 +78,41 @@ class TDLearningAgent(Agent):
 
     def get_move(self, is_training=False):
         """ Chooses the best move based on the estimated value of the next state. """
+        valid_moves = self.get_valid_moves()
         
-        possible_moves = ["UP", "DOWN", "LEFT", "RIGHT"]
+        # If there are no valid moves, the game should be over
+        if not valid_moves:
+            raise ValueError("No valid moves available - game should be over")
+            
         best_move = None
         best_value = -float('inf')
-        current_grid = self.game.grid # The actual grid state
-
+        current_grid = self.game.grid
+        
+        # Epsilon-greedy policy for training
         if is_training and random.random() < self.epsilon:
-            valid_moves = []
-            for move in possible_moves:
-                 # Use util function
-                 _, _, changed = simulate_move_on_grid(current_grid, move)
-                 if changed: valid_moves.append(move)
-            best_move = random.choice(valid_moves) if valid_moves else random.choice(possible_moves)
-            # Need to calculate value even for random move for TD update
+            # Choose a random valid move for exploration
+            best_move = random.choice(valid_moves)
             sim_grid, score_increase, _ = simulate_move_on_grid(current_grid, best_move)
             best_value = self._get_value(sim_grid)
-            
         else:
-            # Greedy action selection
-            next_states_values = {}
-            found_valid = False
-            for move in possible_moves:
-                 # Use util function
-                sim_grid, score_increase, changed = simulate_move_on_grid(current_grid, move)
-                if changed:
-                    found_valid = True
-                    value = self._get_value(sim_grid) 
-                    next_states_values[move] = value 
-                    if value > best_value:
-                        best_value = value
-                        best_move = move
+            # Greedy action selection: choose the move that leads to the highest value state
+            for move in valid_moves:
+                sim_grid, score_increase, _ = simulate_move_on_grid(current_grid, move)
+                value = self._get_value(sim_grid)
+                if value > best_value:
+                    best_value = value
+                    best_move = move
             
-            if best_move is None:
-                if found_valid: 
-                     best_move = random.choice(list(next_states_values.keys()))
-                     # Recalculate best_value for the randomly chosen valid move
-                     sim_grid, _, _ = simulate_move_on_grid(current_grid, best_move)
-                     best_value = self._get_value(sim_grid)
-                else: 
-                     best_move = random.choice(possible_moves)
-                     # Estimate value even if move is likely invalid (game over state)
-                     sim_grid, _, _ = simulate_move_on_grid(current_grid, best_move)
-                     best_value = self._get_value(sim_grid)
+            # Fallback if no move is found (shouldn't happen since we checked for valid moves)
+            if best_move is None and valid_moves:
+                best_move = valid_moves[0]
+                sim_grid, score_increase, _ = simulate_move_on_grid(current_grid, best_move)
+                best_value = self._get_value(sim_grid)
         
-         # Use util function
+        # Store information for TD update
         next_grid_after_move, next_score_increase, _ = simulate_move_on_grid(current_grid, best_move)
         self.last_state_features = self._extract_features(next_grid_after_move)
-        self.last_state_value = self._get_value(next_grid_after_move) # Re-calculate value for s'
+        self.last_state_value = self._get_value(next_grid_after_move)
         self.last_reward = next_score_increase
 
         return best_move

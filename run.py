@@ -27,7 +27,22 @@ def index():
 @app.route('/update', methods=['GET', 'POST'])
 def update():
     move, moved, game_over, score = game_instance.simulate_move()
-    return jsonify(move=game_instance.last_move, grid=game_instance.grid, score=game_instance.score, game_over=game_over)
+    # Check if there was an error (move will be None)
+    if move is None:
+        # The error message is already set in game_instance.last_move
+        return jsonify(
+            move=game_instance.last_move, 
+            grid=game_instance.grid, 
+            score=game_instance.score, 
+            game_over=game_over,
+            error=True
+        )
+    return jsonify(
+        move=game_instance.last_move, 
+        grid=game_instance.grid, 
+        score=game_instance.score, 
+        game_over=game_over
+    )
 
 @app.route('/restart', methods=['GET', 'POST'])
 def restart():
