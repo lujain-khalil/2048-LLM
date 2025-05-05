@@ -15,11 +15,13 @@ training_thread = None
 def train_td_worker(num_episodes, save_interval=100):
     global training_status
     try:
-        training_status["running"] = True
-        training_status["progress"] = 0
-        training_status["total_episodes"] = num_episodes
-        training_status["error"] = None
-        training_status["current_avg_score"] = 0
+        training_status.update({
+            "running": True,
+            "progress": 0,
+            "total_episodes": num_episodes,
+            "current_avg_score": 0,
+            "error": None
+        })
 
         train_game = Game() 
         td_agent_class = get_agent('td_learning')
@@ -33,12 +35,10 @@ def train_td_worker(num_episodes, save_interval=100):
         scores = []
         print(f"Starting TD Learning training for {num_episodes} episodes...")
 
-        for episode in range(num_episodes):
-            train_game.reset_grid() # Resets grid and score
+        for ep in range(num_episodes):
+            train_game.reset_grid()
             game_over = False
-            last_100_scores = []
             
-            # Store features of the very first state
             features_s = td_agent._extract_features(train_game.grid)
 
             while not game_over:
@@ -53,35 +53,34 @@ def train_td_worker(num_episodes, save_interval=100):
 
                 if moved:
                     train_game.add_random_tile()
-                else:
-                    # Agent chose an invalid move - potentially penalize?
-                    # For now, the state doesn't change, reward is likely 0
-                    pass
                     
                 game_over = train_game.is_game_over()
 
                 # 3. Perform TD Update
-                #    We need features from state s (before move) and reward/value from s' (after move)
-                td_agent.update_weights(features_s) 
+                features_s_prime = td_agent._extract_features(train_game.grid)
+                td_agent.last_state_features = features_s_prime
+                td_agent.last_state_value    = td_agent._get_value(train_game.grid)
+                td_agent.last_reward         = reward
 
                 # 4. Update current state features for the next iteration
-                #    Use the features stored by get_move as the features for the *current* state (s)
-                #    in the next step's update.
-                features_s = td_agent.last_state_features if td_agent.last_state_features is not None else td_agent._extract_features(train_game.grid)
+                td_agent.update_weights(features_s)
+                features_s = features_s_prime
+
+                game_over = train_game.is_game_over()
 
             # --- End of Episode --- #
             final_score = train_game.score
             scores.append(final_score)
             last_100_scores = scores[-100:]
             avg_score = sum(last_100_scores) / len(last_100_scores)
-            training_status["progress"] = episode + 1
+            training_status["progress"] = ep + 1
             training_status["current_avg_score"] = avg_score
 
-            if (episode + 1) % 10 == 0:
-                 print(f"Episode {episode+1}/{num_episodes} | Score: {final_score} | Avg Score (last 100): {avg_score:.2f}")
+            if (ep + 1) % 10 == 0:
+                 print(f"Episode {ep+1}/{num_episodes} | Score: {final_score} | Avg Score (last 100): {avg_score:.2f}")
 
             # Save weights periodically
-            if (episode + 1) % save_interval == 0:
+            if (ep + 1) % save_interval == 0:
                 td_agent.save_weights()
 
         # Final save after training completes

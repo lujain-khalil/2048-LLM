@@ -23,9 +23,9 @@ DEFAULT_PARAMS = {
         'rollout_depth': 10
     },
     'td_learning': {
-        'learning_rate': 0.01,
-        'discount_factor': 0.95,
-        'epsilon': 0.1
+        'learning_rate': 0.001,
+        'discount_factor': 0.99,
+        'epsilon': 0.2
     }
 }
 

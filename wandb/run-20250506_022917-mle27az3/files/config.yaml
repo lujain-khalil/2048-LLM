@@ -1,0 +1,32 @@
+_wandb:
+    value:
+        cli_version: 0.19.10
+        m: []
+        python_version: 3.11.11
+        t:
+            "1":
+                - 55
+            "2":
+                - 55
+            "3":
+                - 2
+                - 16
+                - 23
+                - 55
+                - 62
+            "4": 3.11.11
+            "5": 0.19.10
+            "8":
+                - 5
+            "12": 0.19.10
+            "13": linux-x86_64
+agent:
+    value: td_learning
+discount_factor:
+    value: 0.99
+epsilon:
+    value: 0.2
+learning_rate:
+    value: 0.001
+num_games:
+    value: 2

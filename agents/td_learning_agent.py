@@ -1,6 +1,6 @@
 from agents.agent import Agent
 from agents.registry import register_agent
-from simulation.game_utils import simulate_move_on_grid
+from simulation.game_utils import simulate_move_on_grid, empty_score, calculate_heuristic
 import numpy as np
 import random
 import math
@@ -10,65 +10,43 @@ import os
 @register_agent('td_learning')
 class TDLearningAgent(Agent):
     """Agent using Temporal Difference Learning (TD(0)) with a linear value function."""
-    def __init__(self, game, learning_rate=0.01, discount_factor=0.95, epsilon=0.1, weights_file='td_weights.json'):
+    def __init__(self, game, learning_rate=0.001, discount_factor=0.99, epsilon=0.2, weights_file='td_weights.json'):
         super().__init__(game)
         self.learning_rate = learning_rate       # alpha
         self.discount_factor = discount_factor   # gamma
         self.epsilon = epsilon                   # For epsilon-greedy exploration during training
         self.weights_file = weights_file
+
         # Initialize weights (e.g., based on number of features)
-        self.num_features = 16 + 4 + 1 # Example: 16 log2 tiles + 4 mono scores + 1 empty count
+        self.num_features = (4*4) + 1
+        # self.num_features = 1
         self.weights = np.zeros(self.num_features)
-        self.load_weights()
+        # self.load_weights()
+    
         self.last_state_features = None
-        self.last_state_value = 0
-        self.last_reward = 0 # Add missing initialization
+        self.last_state_value = 0.0
+        self.last_reward = 0.0
 
     def _extract_features(self, grid):
         """ Extracts features from the grid state. Normalize or scale features appropriately. """
         features = np.zeros(self.num_features)
         idx = 0
-        empty_count = 0
-        # Log2 of tile values (or 0 for empty) - 16 features
-        for r in range(4):
-            for c in range(4):
-                val = grid[r][c]
-                features[idx] = math.log2(val) if val > 0 else 0
-                if val == 0: empty_count += 1
+        
+        W = [
+            [2**15, 2**14, 2**13, 2**12],
+            [2**8,  2**9,  2**10, 2**11],
+            [2**7,  2**6,   2**5,  2**4],
+            [2**0,  2**1,   2**2,  2**3]
+        ]
+        for i in range(4):
+            for j in range(4):
+                features[idx] = grid[i][j] * W[i][j]
                 idx += 1
         
-        # Monotonicity features (simple difference based) - 4 features
-        mono_score_lr = 0
-        mono_score_ud = 0
-        for r in range(4):
-            for c in range(3):
-                diff = features[r*4 + c+1] - features[r*4 + c]
-                mono_score_lr += diff # Penalize decreases more?
-        for c in range(4):
-             for r in range(3):
-                  diff = features[(r+1)*4 + c] - features[r*4 + c]
-                  mono_score_ud += diff
-        features[idx] = mono_score_lr / 16 # Normalize roughly
-        features[idx+1] = -mono_score_lr / 16 # Try opposite direction too?
-        features[idx+2] = mono_score_ud / 16
-        features[idx+3] = -mono_score_ud / 16
-        idx += 4
-        
-        # Empty cell count - 1 feature
-        features[idx] = empty_count / 16.0 # Normalize
+        features[idx] = empty_score(grid, 100)  # Empty cell bonus
         idx += 1
 
-        # --- Add more features: --- 
-        # Smoothness (adjacent diffs)
-        # Max tile position (corner bias?)
-        # Number of merges possible?
-        
-        # Bias term (can be added as a constant feature if needed)
-        # features = np.append(features, 1.0) # Add bias if self.weights includes bias weight
-
-        # Ensure the number of features matches self.num_features
-        assert idx == self.num_features, f"Feature count mismatch: {idx} vs {self.num_features}"
-        
+        # features = np.array([ calculate_heuristic(grid) ])
         return features
 
     def _get_value(self, grid):
@@ -90,31 +68,23 @@ class TDLearningAgent(Agent):
         
         # Epsilon-greedy policy for training
         if is_training and random.random() < self.epsilon:
-            # Choose a random valid move for exploration
-            best_move = random.choice(valid_moves)
-            sim_grid, score_increase, _ = simulate_move_on_grid(current_grid, best_move)
-            best_value = self._get_value(sim_grid)
-        else:
-            # Greedy action selection: choose the move that leads to the highest value state
-            for move in valid_moves:
-                sim_grid, score_increase, _ = simulate_move_on_grid(current_grid, move)
-                value = self._get_value(sim_grid)
-                if value > best_value:
-                    best_value = value
-                    best_move = move
-            
-            # Fallback if no move is found (shouldn't happen since we checked for valid moves)
-            if best_move is None and valid_moves:
-                best_move = valid_moves[0]
-                sim_grid, score_increase, _ = simulate_move_on_grid(current_grid, best_move)
-                best_value = self._get_value(sim_grid)
+            choice = random.choice(valid_moves)
+            sim_grid, score, _ = simulate_move_on_grid(current_grid, choice)
+            # self.last_reward = max(max(row) for row in sim_grid)
+            self.last_reward = score
+            return choice
         
-        # Store information for TD update
-        next_grid_after_move, next_score_increase, _ = simulate_move_on_grid(current_grid, best_move)
-        self.last_state_features = self._extract_features(next_grid_after_move)
-        self.last_state_value = self._get_value(next_grid_after_move)
-        self.last_reward = next_score_increase
-
+        # Greedy action selection: choose the move that leads to the highest value state
+        for move in valid_moves:
+            sim_grid, score, _ = simulate_move_on_grid(current_grid, move)
+            value = self._get_value(sim_grid)
+            if value > best_value:
+                best_value = value
+                best_move = move
+                # best_reward = max(max(row) for row in sim_grid)
+                best_reward = score
+            
+        self.last_reward = best_reward
         return best_move
 
     def update_weights(self, current_grid_features):
@@ -129,26 +99,22 @@ class TDLearningAgent(Agent):
         The value V(s) needs to be calculated from `current_grid_features`.
         """
         if self.last_state_features is None or current_grid_features is None:
-            # print("Skipping TD update: Missing state features.") # Debug print
+            print("Skipping TD update: Missing state features.") # Debug print
             return # Not enough info for update
 
-        v_s = np.dot(self.weights, current_grid_features) # Value of the state *before* the move
-        v_s_prime = self.last_state_value # Value of the state *after* the move (estimated by get_move)
-        reward = self.last_reward # Immediate reward from the move
-        
-        # TD Error: delta = reward + gamma * V(s') - V(s)
-        td_error = reward + self.discount_factor * v_s_prime - v_s
+        v_s = np.dot(self.weights, current_grid_features) 
+        v_s_prime = np.dot(self.weights, self.last_state_features) 
+        td_err   = self.last_reward + self.discount_factor*v_s_prime - v_s
         
         # Update weights: w = w + alpha * delta * grad(V(s))
         # For linear function, grad(V(s)) is just the feature vector s
-        update = self.learning_rate * td_error * current_grid_features
-        self.weights += update
+        self.weights += self.learning_rate * td_err * current_grid_features
         
         # Optional: Clip weights or check for NaN/Inf
         if np.isnan(self.weights).any() or np.isinf(self.weights).any():
             print("Warning: NaN or Inf detected in weights. Resetting problematic weights?")
             # Handle reset or stop training
-            # self.weights = np.nan_to_num(self.weights) # Example: Replace NaN/Inf with zero
+            self.weights = np.nan_to_num(self.weights) # Example: Replace NaN/Inf with zero
 
     def save_weights(self):
         """Saves the learned weights to a file."""
@@ -174,3 +140,8 @@ class TDLearningAgent(Agent):
                 print(f"Error loading weights: {e}. Using zeros.")
         else:
             print("Weights file not found. Using zero weights.") 
+            try:
+                with open(self.weights_file, 'w') as f:
+                    json.dump(self.weights.tolist(), f)
+            except Exception as e:
+                print(f"Error creating new weights file: {e}")
