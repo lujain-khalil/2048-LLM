@@ -18,6 +18,3 @@ class RandomAgent(Agent):
             raise ValueError("No valid moves available - game should be over")
             
         return random.choice(valid_moves)
-
-# Removed the instance creation here. Instantiation will happen
-# when the simulation selects the agent.
