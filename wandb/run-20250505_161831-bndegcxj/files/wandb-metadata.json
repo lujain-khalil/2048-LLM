@@ -1,0 +1,42 @@
+{
+  "os": "Linux-6.2.0-26-generic-x86_64-with-glibc2.35",
+  "python": "CPython 3.11.11",
+  "startedAt": "2025-05-05T12:18:31.559415Z",
+  "program": "/home/aaiteam1/2048-LLM/run.py",
+  "codePath": "run.py",
+  "git": {
+    "remote": "https://github.com/lujain-khalil/2048-LLM.git",
+    "commit": "010d82c36a7505ebd1660e60ad1c854f3b33e777"
+  },
+  "email": "g00082632@alumni.aus.edu",
+  "root": "/home/aaiteam1/2048-LLM",
+  "host": "AI-Lab-02",
+  "executable": "/home/aaiteam1/anaconda3/envs/2048-medhat/bin/python",
+  "codePathLocal": "run.py",
+  "cpu_count": 8,
+  "cpu_count_logical": 16,
+  "gpu": "Quadro RTX 4000",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "502391562240",
+      "used": "93088464896"
+    }
+  },
+  "memory": {
+    "total": "33464127488"
+  },
+  "cpu": {
+    "count": 8,
+    "countLogical": 16
+  },
+  "gpu_nvidia": [
+    {
+      "name": "Quadro RTX 4000",
+      "memoryTotal": "8589934592",
+      "cudaCores": 2304,
+      "architecture": "Turing"
+    }
+  ],
+  "cudaVersion": "12.2"
+}
