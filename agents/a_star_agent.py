@@ -87,6 +87,6 @@ class AStarAgent(Agent):
             return 0, False, grid
         
         new_g = max(max(row) for row in new_grid)
-        g_delta = (new_g - prev_g) ** 2
+        g_delta = (new_g - prev_g) * 10
         
         return g_delta, True, new_grid

@@ -10,8 +10,7 @@ DEFAULT_PARAMS = {
         'depth_limit': 4
     },
     'ida_star': {
-        'initial_depth_limit': 1,
-        'max_overall_depth': 5
+        'depth_limit': 4,
     },
     'expectimax': {
         'depth': 4
