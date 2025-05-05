@@ -56,7 +56,7 @@ class LLMBaseAgent(Agent):
         prompt = f"""
 You are a 2048 agent, an expert AI that plays the 2048 puzzle.
 
-GAME RULES:
+GAME RULES
 - The board is a 4 x 4 grid of numbers (powers of 2).  
 - Each turn the player chooses one move: **UP, DOWN, LEFT, or RIGHT**.
 - After all tiles slide and merge per 2048 rules, a new tile (2 or 4) spawns in a random empty cell.  
