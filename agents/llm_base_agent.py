@@ -54,21 +54,29 @@ class LLMBaseAgent(Agent):
         valid_moves_str = ", ".join(valid_moves) if valid_moves else "UP, DOWN, LEFT, RIGHT"
         
         prompt = f"""
-You are controlling a 2048 game. Your ultimate goal is to reach the 2048 tile in as few moves as possible.
+You are a 2048 agent, an expert AI that plays the 2048 puzzle.
 
-Strategy guidelines:
-1. **Maximize empty tiles first**: always prefer the move that yields the greatest number of empty spaces on the board.
-2. **Then maximize monotonicity**: among ties, choose the move that makes the grid more monotonic (higher values clustered in one corner, with rows and columns non-increasing).
-3. Only if still tied, choose at random.
+GAME RULES:
+- The board is a 4 x 4 grid of numbers (powers of 2).  
+- Each turn the player chooses one move: **UP, DOWN, LEFT, or RIGHT**.
+- After all tiles slide and merge per 2048 rules, a new tile (2 or 4) spawns in a random empty cell.  
+- The game is won when any tile reaches **2048**.  
+- The game is lost when no legal moves remain.
 
-Here’s the current grid (0s shown as “_”):
+OBJECTIVE
+Your goal is to win the game by creating a 2048 tile. 
+If you reach 2048, keep playing the game with the goal to reach higher maximum tiles, until no legal moves remain.
+You should try to follow the following strategies:
+1. **Moves with empty tiles**: Make moves that create empty tiles, especially earlier in the game.
+2. **Create a snake pattern**: Try to create a snake-like pattern in the grid, with the highest value starting in the upper left corner of the grid.
+
+Here is the current grid (0s shown as “_”):
 
 {grid_str}
-Current score: {self.game.score}
 
 Valid moves: {valid_moves_str}
 
-Given these guidelines, pick **exactly one** of the valid moves—UP, DOWN, LEFT, or RIGHT—and reply with that word only.
+Given these guidelines, pick **exactly one** of the valid moves (UP, DOWN, LEFT, or RIGHT) and reply with that word only.
 """
         return prompt
 
