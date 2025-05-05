@@ -16,6 +16,9 @@ DEFAULT_PARAMS = {
     'expectimax': {
         'depth': 2
     },
+    'alpha-beta-expectimax': {
+        'depth': 2
+    },
     'mcts': {
         'iterations': 100,
         'rollout_depth': 10

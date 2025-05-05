@@ -10,7 +10,7 @@ class AStarAgent(Agent):
     def __init__(self, game, depth_limit=None):
         super().__init__(game)
         self.moves = ["UP", "RIGHT", "DOWN", "LEFT"]
-        self.depth_limit = depth_limit if depth_limit is not None else 1
+        self.depth_limit = depth_limit if depth_limit is not None else 3
 
     def get_move(self):
         """Use heuristic evaluation to find the best move."""
@@ -39,7 +39,7 @@ class AStarAgent(Agent):
                 score = self._depth_limited_search(sim_grid, current_score + score_increase, 1, self.depth_limit, path)
             else:
                 # Original single-ply evaluation
-                score = self._evaluate_position(sim_grid)
+                score = calculate_heuristic(sim_grid)
             
             if score > best_score:
                 best_score = score
@@ -87,50 +87,3 @@ class AStarAgent(Agent):
             max_heuristic_found = max(max_heuristic_found, result_heuristic)
             
         return max_heuristic_found
-
-    def _evaluate_position(self, grid):
-        """
-        Evaluate the current position using multiple heuristics:
-        1. Number of empty tiles
-        2. Monotonicity of rows and columns
-        """
-        # Count empty tiles (weight: 1.0)
-        empty_count = sum(1 for row in grid for cell in row if cell == 0)
-        empty_score = empty_count
-
-        # Calculate monotonicity score (weight: 2.0)
-        monotonicity_score = self._calculate_monotonicity(grid) * 2.0
-
-        return empty_score + monotonicity_score
-
-    def _calculate_monotonicity(self, grid):
-        """
-        Calculate how monotonic the grid is (either increasing or decreasing)
-        both horizontally and vertically.
-        """
-        total_score = 0
-        
-        # Check rows
-        for row in grid:
-            # Check left-to-right monotonicity
-            lr_mon = all(row[i] <= row[i+1] for i in range(len(row)-1) if row[i+1] != 0)
-            # Check right-to-left monotonicity
-            rl_mon = all(row[i] >= row[i+1] for i in range(len(row)-1) if row[i] != 0)
-            total_score += 1 if lr_mon or rl_mon else 0
-
-        # Check columns
-        for j in range(4):
-            column = [grid[i][j] for i in range(4)]
-            # Check top-to-bottom monotonicity
-            tb_mon = all(column[i] <= column[i+1] for i in range(len(column)-1) if column[i+1] != 0)
-            # Check bottom-to-top monotonicity
-            bt_mon = all(column[i] >= column[i+1] for i in range(len(column)-1) if column[i] != 0)
-            total_score += 1 if tb_mon or bt_mon else 0
-
-        # Additional bonus for highest value in corner
-        corners = [grid[0][0], grid[0][3], grid[3][0], grid[3][3]]
-        max_val = max(max(row) for row in grid)
-        if max_val in corners:
-            total_score += 2
-
-        return total_score 

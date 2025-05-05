@@ -36,6 +36,12 @@ const algorithmExplanations = {
         considering both player decisions and the random tile placements. Creates a game tree with "expectation"
         nodes to model randomness.
     `,
+    'alpha_beta_expectimax': `
+        <strong>Alpha-Beta Expectimax</strong>: An optimized version of Expectimax that uses alpha-beta pruning
+        to reduce the number of nodes explored. It maintains upper and lower bounds during the search to skip
+        branches that won't affect the final decision, making it more efficient while providing identical results
+        to regular Expectimax.
+    `,
     'mcts': `
         <strong>Monte Carlo Tree Search</strong>: Builds a search tree through repeated random simulations (rollouts).
         It balances exploration of new moves and exploitation of promising strategies using the UCB1 selection
