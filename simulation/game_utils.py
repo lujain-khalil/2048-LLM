@@ -86,7 +86,7 @@ def calculate_heuristic(grid, score=None):
     return empty_term + snake_term
 
 
-def empty_score(grid, weight=1):
+def empty_score(grid, weight=100):
     """Weight x number of zeros; weight shrinks as tiles grow."""
     empty = sum(1 for row in grid for cell in row if cell == 0)
     return weight * empty

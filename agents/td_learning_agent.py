@@ -20,8 +20,11 @@ class TDLearningAgent(Agent):
         # Initialize weights (e.g., based on number of features)
         self.num_features = (4*4) + 1
         # self.num_features = 1
+
         self.weights = np.zeros(self.num_features)
-        # self.load_weights()
+        is_training = True ################## # Change this to False for evaluation
+        if not is_training:
+            self.load_weights()            
     
         self.last_state_features = None
         self.last_state_value = 0.0
@@ -54,7 +57,7 @@ class TDLearningAgent(Agent):
         features = self._extract_features(grid)
         return np.dot(self.weights, features)
 
-    def get_move(self, is_training=False):
+    def get_move(self, training=False):
         """ Chooses the best move based on the estimated value of the next state. """
         valid_moves = self.get_valid_moves()
         
@@ -67,11 +70,11 @@ class TDLearningAgent(Agent):
         current_grid = self.game.grid
         
         # Epsilon-greedy policy for training
-        if is_training and random.random() < self.epsilon:
+        if training and random.random() < self.epsilon:
             choice = random.choice(valid_moves)
             sim_grid, score, _ = simulate_move_on_grid(current_grid, choice)
-            # self.last_reward = max(max(row) for row in sim_grid)
-            self.last_reward = score
+            self.last_reward = max(max(row) for row in sim_grid)
+            # self.last_reward = score
             return choice
         
         # Greedy action selection: choose the move that leads to the highest value state
@@ -81,8 +84,8 @@ class TDLearningAgent(Agent):
             if value > best_value:
                 best_value = value
                 best_move = move
-                # best_reward = max(max(row) for row in sim_grid)
-                best_reward = score
+                best_reward = max(max(row) for row in sim_grid)
+                # best_reward = score
             
         self.last_reward = best_reward
         return best_move

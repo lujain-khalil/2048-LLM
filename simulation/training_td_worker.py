@@ -12,7 +12,7 @@ training_status = {
 training_thread = None
 
 # --- Helper function for TD training ---
-def train_td_worker(num_episodes, save_interval=100):
+def train_td_worker(num_episodes, save_interval=100, training=True):
     global training_status
     try:
         training_status.update({
@@ -44,7 +44,8 @@ def train_td_worker(num_episodes, save_interval=100):
             while not game_over:
                 # 1. Choose action using epsilon-greedy (get_move handles this)
                 #    get_move also stores expected next state features/value for update
-                move = td_agent.get_move(is_training=True)
+                # move = td_agent.get_move(is_training=True)
+                move = td_agent.get_move(is_training=training)
                 
                 # 2. Take action in the environment (game)
                 #    The game state is updated internally by move_grid
@@ -53,18 +54,17 @@ def train_td_worker(num_episodes, save_interval=100):
 
                 if moved:
                     train_game.add_random_tile()
-                    
-                game_over = train_game.is_game_over()
+                
+                if training:
+                    # 3. Perform TD Update
+                    features_s_prime = td_agent._extract_features(train_game.grid)
+                    td_agent.last_state_features = features_s_prime
+                    td_agent.last_state_value    = td_agent._get_value(train_game.grid)
+                    # td_agent.last_reward         = reward
 
-                # 3. Perform TD Update
-                features_s_prime = td_agent._extract_features(train_game.grid)
-                td_agent.last_state_features = features_s_prime
-                td_agent.last_state_value    = td_agent._get_value(train_game.grid)
-                td_agent.last_reward         = reward
-
-                # 4. Update current state features for the next iteration
-                td_agent.update_weights(features_s)
-                features_s = features_s_prime
+                    # 4. Update current state features for the next iteration
+                    td_agent.update_weights(features_s)
+                    features_s = features_s_prime
 
                 game_over = train_game.is_game_over()
 
@@ -80,12 +80,15 @@ def train_td_worker(num_episodes, save_interval=100):
                  print(f"Episode {ep+1}/{num_episodes} | Score: {final_score} | Avg Score (last 100): {avg_score:.2f}")
 
             # Save weights periodically
-            if (ep + 1) % save_interval == 0:
+            if training and (ep + 1) % save_interval == 0:
                 td_agent.save_weights()
 
-        # Final save after training completes
-        td_agent.save_weights()
-        print("TD Learning training finished.")
+        if training:
+            # Final save after training completes
+            td_agent.save_weights()
+            print("TD Learning training finished.")
+        else:
+            print("Evaluation run complete (no weights updated).")
 
     except Exception as e:
         print(f"TD Training failed: {e}")

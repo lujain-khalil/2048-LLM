@@ -5,7 +5,7 @@ from simulation.game_utils import simulate_move_on_grid, calculate_heuristic, ge
 @register_agent('expectimax')
 class ExpectimaxAgent(Agent):
     """Agent using the Expectimax algorithm to handle randomness."""
-    def __init__(self, game, depth=4):
+    def __init__(self, game, depth=5):
         super().__init__(game)
         self.search_depth = depth
 

@@ -8,7 +8,7 @@ from simulation.game_utils import simulate_move_on_grid, calculate_heuristic
 @register_agent('a_star')
 class AStarAgent(Agent):
     """A true best‐first (A*) agent with bounded depth."""
-    def __init__(self, game, depth_limit=4):
+    def __init__(self, game, depth_limit=5):
         super().__init__(game)
         self.moves = ["UP", "RIGHT", "DOWN", "LEFT"]
         self.depth_limit = depth_limit

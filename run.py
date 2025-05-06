@@ -12,6 +12,7 @@ import numpy as np
 from dotenv import load_dotenv
 from simulation.simulation_worker import run_simulation_worker, simulation_status, simulation_thread
 from simulation.training_td_worker import train_td_worker, training_status, training_thread
+import argparse
 
 load_dotenv()
 # Ensure WANDB_API_KEY is set as an environment variable
@@ -189,5 +190,16 @@ def get_training_status():
     return jsonify(training_status)
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description="Run your Flask simulation app")
+    parser.add_argument(
+        '-p', '--port',
+        type=int,
+        default=5000,
+        help="Port to listen on (default: 5000)"
+    )
+    args = parser.parse_args()
+
     list_agents()
-    app.run(debug=True, host='0.0.0.0', port=5006)
+    # app.run(debug=False, use_reloader=False, host='0.0.0.0', port=args.port)
+    app.run(debug=True, use_reloader=True, host='0.0.0.0', port=args.port)

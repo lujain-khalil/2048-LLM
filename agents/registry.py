@@ -7,16 +7,16 @@ import agents
 AGENT_REGISTRY = {}
 DEFAULT_PARAMS = {
     'a_star': {
-        'depth_limit': 10
+        'depth_limit': 5
     },
     'ida_star': {
-        'depth_limit': 10,
+        'depth_limit': 5,
     },
     'expectimax': {
-        'depth': 10
+        'depth': 3
     },
     'alpha-beta-expectimax': {
-        'depth': 10
+        'depth': 3
     },
     'mcts': {
         'iterations': 1000,
