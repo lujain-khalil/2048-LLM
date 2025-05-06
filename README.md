@@ -6,15 +6,8 @@ A 2048 game that can be played with various AI agents, including LLM models. Thi
 
 Below are visual representations of the game and its pipeline:
 
-<table>
-  <tr>
-    <td>
-    <td>
-      <img src="figures/project-pipeline.png" alt="Pipeline" width="300"/>
-      <p align="center">Project Pipeline</p>
-    </td>
-  </tr>
-</table>
+![Pipeline](figures/project-pipeline.png)
+*Project Pipeline*
 
 ## Codebase Overview
 

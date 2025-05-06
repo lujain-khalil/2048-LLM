@@ -4,6 +4,7 @@ import { updateGrid } from './grid.js';
 // Game control state
 let gameInterval;
 let isPaused = false;
+let previousGrid = null;
 
 // Speed settings in milliseconds
 const SPEEDS = {
