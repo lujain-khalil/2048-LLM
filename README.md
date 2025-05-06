@@ -2,6 +2,20 @@
 
 A 2048 game that can be played with various AI agents, including LLM models. This project integrates multiple AI agents to play the classic 2048 game, providing a platform for experimenting with different AI strategies and models.
 
+### Game Visuals
+
+Below are visual representations of the game and its pipeline:
+
+<table>
+  <tr>
+    <td>
+    <td>
+      <img src="figures/pipeline.png" alt="Pipeline" width="300"/>
+      <p align="center">Project Pipeline</p>
+    </td>
+  </tr>
+</table>
+
 ## Codebase Overview
 
 The codebase is organized into the following main directories and files:
