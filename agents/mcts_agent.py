@@ -1,6 +1,6 @@
 from agents.agent import Agent
 from agents.registry import register_agent
-from simulation.game_utils import simulate_move_on_grid, calculate_heuristic, get_empty_cells, is_terminal
+from simulation.game_utils import simulate_move_on_grid, calculate_heuristic, get_empty_cells, is_terminal, empty_score
 import random
 import math
 import time
@@ -157,5 +157,5 @@ class MCTSAgent(Agent):
                 sim_grid[r][c] = 2 if random.random() < 0.9 else 4
 
             max_tile = max(max_tile, max(cell for row in sim_grid for cell in row))
-        bonus = calculate_heuristic(sim_grid) * 0.001
+        bonus = empty_score(sim_grid) * 0.1
         return max_tile + bonus

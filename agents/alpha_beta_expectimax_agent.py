@@ -7,9 +7,9 @@ import math
 @register_agent('alpha_beta_expectimax')
 class AlphaBetaExpectimaxAgent(Agent):
     """Agent using the Expectimax algorithm with alpha-beta pruning to handle randomness more efficiently."""
-    def __init__(self, game, depth=3):
+    def __init__(self, game, depth=2):
         super().__init__(game)
-        self.search_depth = depth
+        self.search_depth = 2
 
     def get_move(self):
         valid_moves = self.get_valid_moves()

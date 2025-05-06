@@ -76,20 +76,30 @@ import math
 
 def calculate_heuristic(grid, score=None):
     """
-    Composite 2048 heuristic:
-      • empty‐cell bonus (decaying)
-      • snake‐pattern gradient
+    Composite 2048 heuristic.
     """
-    empty_term = empty_score(grid, 100)
-    snake_term = snake_weight_score(grid)
+    empty_term = empty_score(grid, 50)
+    snake_term = snake_weight_score(grid, 1)
+    mono_term = monotonicity_score(grid, 1.5) 
+    smooth_term = smoothness_score(grid, 0.3) 
 
-    return empty_term + snake_term
+    return empty_term + snake_term + mono_term + smooth_term
 
 
-def empty_score(grid, weight=100):
-    """Weight x number of zeros; weight shrinks as tiles grow."""
-    empty = sum(1 for row in grid for cell in row if cell == 0)
-    return weight * empty
+# def empty_score(grid, weight=100):
+#     """Weight x number of zeros; weight shrinks as tiles grow."""
+#     empty = sum(1 for row in grid for cell in row if cell == 0)
+#     return weight * empty
+
+def empty_score(grid, weight=50):
+    """
+    Rewards empty cells, with a weight that decays as the game progresses (more non-empty cells).
+    This encourages keeping space for future moves, especially early in the game.
+    """
+    empty_cells = sum(1 for row in grid for cell in row if cell == 0)
+    non_empty_cells = 16 - empty_cells
+    decay_factor = 0.9 ** non_empty_cells # Exponential decay
+    return weight * empty_cells * decay_factor
 
 
 def snake_weight_score(grid, weight=1):
@@ -108,6 +118,53 @@ def snake_weight_score(grid, weight=1):
             score += grid[i][j] * W[i][j]
     return score * weight
 
+def monotonicity_score(grid, weight=1.5):
+    """
+    Compute the monotonicity score of a 4x4 grid.
+    The score is the maximum number of non-increasing adjacent pairs (horizontally or vertically)
+    over all four rotations of the board.
+    """
+    best = -1
+
+    # Repeat for each of the 4 orientations
+    for _ in range(4):
+        current = 0
+
+        # Horizontal checks: each row, compare col and col+1
+        for row in range(4):
+            for col in range(3):
+                if grid[row][col] >= grid[row][col + 1]:
+                    current += 1
+
+        # Vertical checks: each column, compare row and row+1
+        for col in range(4):
+            for row in range(3):
+                if grid[row][col] >= grid[row + 1][col]:
+                    current += 1
+
+        # Keep the maximum over all rotations
+        best = max(best, current)
+
+        # Rotate the board 90° clockwise for the next iteration
+        n = len(grid)
+        grid = [[grid[n-1-j][i] for j in range(n)] for i in range(n)]
+
+    return best * weight
+
+def smoothness_score(grid, weight=0.3):
+    """Penalizes adjacent tiles with large differences"""
+    penalty = 0
+    for i in range(4):
+        for j in range(4):
+            if grid[i][j] != 0:
+                val = grid[i][j]
+                # Check right neighbor
+                if j < 3 and grid[i][j+1] != 0:
+                    penalty += abs(val - grid[i][j+1])
+                # Check bottom neighbor
+                if i < 3 and grid[i+1][j] != 0:
+                    penalty += abs(val - grid[i+1][j])
+    return -weight * penalty
 
 def get_empty_cells(grid):
     """ Returns a list of (row, col) tuples for empty cells. """

@@ -201,5 +201,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     list_agents()
-    # app.run(debug=False, use_reloader=False, host='0.0.0.0', port=args.port)
-    app.run(debug=True, use_reloader=True, host='0.0.0.0', port=args.port)
+    app.run(debug=False, use_reloader=False, host='0.0.0.0', port=args.port)
+    # app.run(debug=True, use_reloader=True, host='0.0.0.0', port=args.port)

@@ -1,6 +1,6 @@
 from agents.agent import Agent
 from agents.registry import register_agent
-from simulation.game_utils import simulate_move_on_grid, empty_score, calculate_heuristic
+from simulation.game_utils import simulate_move_on_grid, empty_score, calculate_heuristic, smoothness_score, monotonicity_score
 import numpy as np
 import random
 import math
@@ -18,11 +18,12 @@ class TDLearningAgent(Agent):
         self.weights_file = weights_file
 
         # Initialize weights (e.g., based on number of features)
-        self.num_features = (4*4) + 1
+        # self.num_features = (4*4) + 1
         # self.num_features = 1
+        self.num_features = 20
 
         self.weights = np.zeros(self.num_features)
-        is_training = True ################## # Change this to False for evaluation
+        is_training = False ################## # Change this to False for evaluation
         if not is_training:
             self.load_weights()            
     
@@ -32,6 +33,21 @@ class TDLearningAgent(Agent):
 
     def _extract_features(self, grid):
         """ Extracts features from the grid state. Normalize or scale features appropriately. """
+        def potential_merge_bonus(g, weight=2.0):
+            """Bonus for adjacent tiles with same value (potential merges)"""
+            bonus = 0
+            for i in range(4):
+                for j in range(4):
+                    if g[i][j] == 0:
+                        continue
+                    # Check right neighbor
+                    if j < 3 and g[i][j] == g[i][j+1]:
+                        bonus += g[i][j]
+                    # Check bottom neighbor
+                    if i < 3 and g[i][j] == g[i+1][j]:
+                        bonus += g[i][j]
+            return weight * bonus
+        
         features = np.zeros(self.num_features)
         idx = 0
         
@@ -46,10 +62,18 @@ class TDLearningAgent(Agent):
                 features[idx] = grid[i][j] * W[i][j]
                 idx += 1
         
-        features[idx] = empty_score(grid, 100)  # Empty cell bonus
+        features[idx] = empty_score(grid)  # Empty cell bonus
         idx += 1
 
-        # features = np.array([ calculate_heuristic(grid) ])
+        features[idx] = smoothness_score(grid)  # Smoothness score
+        idx += 1
+
+        features[idx] = monotonicity_score(grid)
+        idx += 1
+
+        features[idx] = potential_merge_bonus(grid)
+        idx += 1
+
         return features
 
     def _get_value(self, grid):
@@ -73,8 +97,8 @@ class TDLearningAgent(Agent):
         if training and random.random() < self.epsilon:
             choice = random.choice(valid_moves)
             sim_grid, score, _ = simulate_move_on_grid(current_grid, choice)
-            self.last_reward = max(max(row) for row in sim_grid)
-            # self.last_reward = score
+            max_tile = max(max(row) for row in sim_grid)
+            self.last_reward = math.log2(max_tile) + (0.01 * calculate_heuristic(sim_grid))
             return choice
         
         # Greedy action selection: choose the move that leads to the highest value state
@@ -84,8 +108,8 @@ class TDLearningAgent(Agent):
             if value > best_value:
                 best_value = value
                 best_move = move
-                best_reward = max(max(row) for row in sim_grid)
-                # best_reward = score
+                max_tile = max(max(row) for row in sim_grid)
+                best_reward = math.log2(max_tile) + (0.01 * calculate_heuristic(sim_grid))
             
         self.last_reward = best_reward
         return best_move
